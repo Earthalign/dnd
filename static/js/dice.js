@@ -2,12 +2,28 @@
    Dice Rolling Modal – 5d6 drop 2 lowest
    ============================================ */
 
-const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 const STAT_ORDER = ['str','dex','con','int','wis','cha'];
 const STAT_I18N_KEYS = {
     str: 'stat_str', dex: 'stat_dex', con: 'stat_con',
     int: 'stat_int', wis: 'stat_wis', cha: 'stat_cha'
 };
+
+const faceRotations = {
+    1: { x: 0, y: 0 },
+    2: { x: 0, y: -90 },
+    3: { x: 0, y: -180 },
+    4: { x: 0, y: 90 },
+    5: { x: -90, y: 0 },
+    6: { x: 90, y: 0 }
+};
+
+function setDieRotation(el, result) {
+    const SPINS = 720;
+    const xRand = Math.floor(Math.random() * 3) * 360 + SPINS;
+    const yRand = Math.floor(Math.random() * 3) * 360 + SPINS;
+    const r = faceRotations[result];
+    el.style.transform = `translateZ(-25px) rotateX(${r.x + xRand}deg) rotateY(${r.y + yRand}deg)`;
+}
 
 let diceResults = {};
 
@@ -45,8 +61,19 @@ function buildDiceModalContent() {
                 <span class="text-sm font-bold text-gray-300 font-serif uppercase tracking-wider">${t(STAT_I18N_KEYS[stat])}</span>
                 <span class="dice-stat-result" id="dice-result-${stat}">—</span>
             </div>
-            <div class="flex items-center gap-2.5 justify-center" id="dice-boxes-${stat}">
-                ${[0,1,2,3,4].map(i => `<div class="die-box" id="die-${stat}-${i}">?</div>`).join('')}
+            <div class="flex items-center justify-center" id="dice-boxes-${stat}">
+                ${[0,1,2,3,4].map(i => `
+                    <div class="scene">
+                        <div class="cube" id="die-${stat}-${i}">
+                            <div class="cube__face cube__face--1">⚀</div>
+                            <div class="cube__face cube__face--2">⚁</div>
+                            <div class="cube__face cube__face--3">⚂</div>
+                            <div class="cube__face cube__face--4">⚃</div>
+                            <div class="cube__face cube__face--5">⚄</div>
+                            <div class="cube__face cube__face--6">⚅</div>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
             <div class="text-center mt-1.5">
                 <span class="text-[10px] text-gray-600 font-semibold uppercase tracking-wider" id="dice-dropped-${stat}"></span>
@@ -90,18 +117,9 @@ async function rollStatAnimated(stat) {
 
     // Phase 1: All dice "rolling" animation
     dieEls.forEach(el => {
+        el.style.transition = 'none';
         el.classList.add('rolling');
-        el.textContent = '?';
     });
-
-    // Rapid random face cycling for 1.2 seconds
-    const spinInterval = setInterval(() => {
-        dieEls.forEach(el => {
-            if (el.classList.contains('rolling')) {
-                el.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
-            }
-        });
-    }, 80);
 
     await sleep(600);
 
@@ -109,14 +127,13 @@ async function rollStatAnimated(stat) {
     const finalDice = roll5d6();
 
     for (let i = 0; i < 5; i++) {
-        await sleep(280);
+        await sleep(150);
         dieEls[i].classList.remove('rolling');
-        dieEls[i].textContent = DICE_FACES[finalDice[i] - 1];
+        dieEls[i].style.transition = 'transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        setDieRotation(dieEls[i], finalDice[i]);
     }
 
-    clearInterval(spinInterval);
-
-    await sleep(350);
+    await sleep(1400); // Wait for the last die to finish its 1.5s transition
 
     // Phase 3: Mark dropped dice and show result
     const sorted = finalDice.map((v, i) => ({v, i})).sort((a, b) => a.v - b.v);

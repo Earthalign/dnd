@@ -140,6 +140,31 @@ def generate_character_pdf(char_data: dict, output_path: str):
         "ataki i magia": char_data.get("attacks", ""),
     }
 
+    # --- CZARY (Spellcasting) ---
+    # Spellcasting class header
+    if char_data.get("spellcasting_stat"):
+        sc_stat = char_data["spellcasting_stat"]  # e.g. "cha", "wis", "int"
+        sc_mod = mods.get(sc_stat, 0)
+        prof = char_data.get("prof_bonus", 2)
+        spell_save_dc = 8 + prof + sc_mod
+        spell_attack = prof + sc_mod
+        
+        stat_names_map = {"cha": "CHA", "wis": "WIS", "int": "INT"}
+        fields_to_fill["CB"] = stat_names_map.get(sc_stat, sc_stat.upper())
+        fields_to_fill["ST"] = str(spell_save_dc)
+        fields_to_fill["PR"] = ms(spell_attack)
+        fields_to_fill["czar"] = char_data.get("class_name", "")
+
+    # Cantrips: czar 1 through czar 7
+    cantrip_names = char_data.get("cantrip_names", [])
+    for i, spell_name in enumerate(cantrip_names[:7]):
+        fields_to_fill[f"czar {i + 1}"] = spell_name
+
+    # Level 1 spells: czar 8 through czar 20
+    spell1_names = char_data.get("spell1_names", [])
+    for i, spell_name in enumerate(spell1_names[:13]):
+        fields_to_fill[f"czar {i + 8}"] = spell_name
+
     doc = fitz.open(template_path)
 
     for page in doc:

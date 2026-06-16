@@ -144,40 +144,64 @@ h1, h2, h3, h4, .font-rpg {
     transform: scale(1);
 }
 
-/* Single die box */
-.die-box {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
+/* 3D Dice Scene */
+.scene {
+    width: 50px;
+    height: 50px;
+    perspective: 400px;
+    margin: 0 4px;
+}
+.cube {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateZ(-25px);
+}
+.cube.rolling {
+    animation: spinCube 0.6s infinite linear;
+}
+@keyframes spinCube {
+    0% { transform: translateZ(-25px) rotateX(0deg) rotateY(0deg); }
+    100% { transform: translateZ(-25px) rotateX(360deg) rotateY(360deg); }
+}
+
+/* Single die face */
+.cube__face {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 38px;
     font-weight: 800;
     border: 2px solid rgba(255,255,255,0.12);
-    background: rgba(30, 30, 42, 0.9);
+    background: rgba(30, 30, 42, 0.95);
     color: #e5e7eb;
-    transition: all 0.35s ease;
     font-family: 'Cinzel', serif;
+    line-height: 1;
 }
-.die-box.rolling {
-    animation: dieShake 0.12s infinite alternate;
-    border-color: rgba(212, 175, 55, 0.5);
-    color: #d4af37;
-}
-.die-box.kept {
-    border-color: rgba(52, 211, 153, 0.5);
-    background: rgba(16, 185, 129, 0.08);
+
+.cube__face--1  { transform: rotateY(  0deg) translateZ(25px); }
+.cube__face--2  { transform: rotateY( 90deg) translateZ(25px); }
+.cube__face--3  { transform: rotateY(180deg) translateZ(25px); }
+.cube__face--4  { transform: rotateY(-90deg) translateZ(25px); }
+.cube__face--5  { transform: rotateX( 90deg) translateZ(25px); }
+.cube__face--6  { transform: rotateX(-90deg) translateZ(25px); }
+
+.cube.kept .cube__face {
+    border-color: rgba(52, 211, 153, 0.6);
+    background: rgba(16, 185, 129, 0.15);
     color: #34d399;
-    box-shadow: 0 0 8px rgba(52, 211, 153, 0.15);
+    box-shadow: inset 0 0 10px rgba(52, 211, 153, 0.2);
 }
-.die-box.dropped {
+.cube.dropped .cube__face {
     border-color: rgba(244, 63, 94, 0.35);
-    background: rgba(244, 63, 94, 0.06);
+    background: rgba(244, 63, 94, 0.1);
     color: #9ca3af;
     opacity: 0.45;
-    text-decoration: line-through;
-    text-decoration-color: #f43f5e;
 }
 
 /* Stat row in dice modal */
@@ -203,12 +227,6 @@ h1, h2, h3, h4, .font-rpg {
 }
 .dice-stat-row.done .dice-stat-result {
     opacity: 1;
-}
-
-/* Shake animation */
-@keyframes dieShake {
-    0%   { transform: rotate(-6deg) scale(1.05); }
-    100% { transform: rotate(6deg) scale(0.95); }
 }
 
 /* PDF language note */

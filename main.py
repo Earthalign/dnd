@@ -5,9 +5,12 @@ from fastapi.templating import Jinja2Templates
 import os
 
 from character import build_character_sheet, auto_assign_stats_try_harder, auto_assign_stats_balanced, validate_point_buy
-from dnd_data import CLASSES, RACES, BACKGROUNDS, SKILLS
+from dnd_data import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS
 
 app = FastAPI(title="D&D 5e Character Creator")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Setup szablonów HTML
 templates = Jinja2Templates(directory="templates")
@@ -21,9 +24,14 @@ async def index(request: Request):
             "classes": CLASSES,
             "races": RACES,
             "backgrounds": BACKGROUNDS,
-            "skills": SKILLS
+            "skills": SKILLS,
+            "spells": SPELLS
         }
     )
+
+@app.get("/spellbook", response_class=HTMLResponse)
+async def spellbook(request: Request):
+    return templates.TemplateResponse(request=request, name="spellbook.html")
 
 @app.post("/api/auto-stats")
 async def api_auto_stats(data: dict):
@@ -53,11 +61,15 @@ async def generate_pdf(request: Request):
         "cha": int(form_data_raw.get("charisma", 10)),
     }
     
+    # Pobieranie trybu generowania atrybutów
+    stat_mode = form_data_raw.get("stat_mode", "point_buy")
+    
     # Walidacja Point Buy
-    is_valid, err_msg = validate_point_buy(stats)
-    if not is_valid:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail=err_msg)
+    if stat_mode == "point_buy":
+        is_valid, err_msg = validate_point_buy(stats)
+        if not is_valid:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail=err_msg)
         
     # Budowanie słownika form_data
     form_data = dict(form_data_raw)
@@ -74,9 +86,33 @@ async def generate_pdf(request: Request):
     form_data["skills"] = form_data_raw.getlist("skills")
     form_data["expertise"] = form_data_raw.getlist("expertise")
     
+    # Pobieranie wybranych czarów
+    form_data["selected_cantrips"] = form_data_raw.getlist("selected_cantrips")
+    form_data["selected_spells_1"] = form_data_raw.getlist("selected_spells_1")
+    
     form_data["level"] = int(form_data.get("level", 1))
     
     sheet = build_character_sheet(form_data)
+    
+    # Dodaj czary do sheeta (w PL)
+    from dnd_data import SPELLS as SPELLS_DATA
+    
+    cantrip_names = []
+    for spell_id in form_data.get("selected_cantrips", []):
+        for s in SPELLS_DATA.get("cantrip", []):
+            if s["id"] == spell_id:
+                cantrip_names.append(s["name_pl"])
+                break
+    
+    spell1_names = []
+    for spell_id in form_data.get("selected_spells_1", []):
+        for s in SPELLS_DATA.get("level_1", []):
+            if s["id"] == spell_id:
+                spell1_names.append(s["name_pl"])
+                break
+    
+    sheet["cantrip_names"] = cantrip_names
+    sheet["spell1_names"] = spell1_names
     
     # Generowanie unikalnego PDF w katalogu
     name = form_data.get("name", "Bohater")

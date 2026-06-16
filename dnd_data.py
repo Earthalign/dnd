@@ -539,10 +539,61 @@ SKILLS = {
     "wykonanie": {"stat": "cha", "name": "Występy"},
     "perswazja": {"stat": "cha", "name": "Perswazja"},
     "religia": {"stat": "int", "name": "Religia"},
-    "sleight_of_hand": {"stat": "dex", "name": "Zwinne dłonie"},
-    "ukrycie": {"stat": "dex", "name": "Skradanie się"},
-    "przetrwanie": {"stat": "wis", "name": "Sztuka przetrwania"},
-    "obsługa zwierząt": {"stat": "wis", "name": "Opieka nad zwierzętami"},
+    "sleight_of_hand": {"name": "Zwinne dłonie", "name_en": "Sleight of Hand", "stat": "dex", "desc": "Sztuczki manualne, kradzież kieszonkowa."},
+    "stealth": {"name": "Ukrycie", "name_en": "Stealth", "stat": "dex", "desc": "Bezszelestne poruszanie się, chowanie w cieniu."},
+    "survival": {"name": "Sztuka przetrwania", "name_en": "Survival", "stat": "wis", "desc": "Tropienie, orientacja w terenie, polowanie."}
+}
+
+SPELLS = {
+    "cantrip": [
+        {"id": "acid_splash", "name_pl": "Rozprysk Kwasu", "name_en": "Acid Splash", "classes": ["sorcerer", "wizard"]},
+        {"id": "chill_touch", "name_pl": "Trupi Dotyk", "name_en": "Chill Touch", "classes": ["sorcerer", "warlock", "wizard"]},
+        {"id": "dancing_lights", "name_pl": "Tańczące Światła", "name_en": "Dancing Lights", "classes": ["bard", "sorcerer", "wizard"]},
+        {"id": "eldritch_blast", "name_pl": "Niesamowite Uderzenie", "name_en": "Eldritch Blast", "classes": ["warlock"]},
+        {"id": "fire_bolt", "name_pl": "Ognisty Pocisk", "name_en": "Fire Bolt", "classes": ["sorcerer", "wizard"]},
+        {"id": "guidance", "name_pl": "Przewodnictwo", "name_en": "Guidance", "classes": ["cleric", "druid"]},
+        {"id": "light", "name_pl": "Światło", "name_en": "Light", "classes": ["bard", "cleric", "sorcerer", "wizard"]},
+        {"id": "mage_hand", "name_pl": "Magiczna Dłoń", "name_en": "Mage Hand", "classes": ["bard", "sorcerer", "warlock", "wizard"]},
+        {"id": "minor_illusion", "name_pl": "Drobna Iluzja", "name_en": "Minor Illusion", "classes": ["bard", "sorcerer", "warlock", "wizard"]},
+        {"id": "prestidigitation", "name_pl": "Sztuczka", "name_en": "Prestidigitation", "classes": ["bard", "sorcerer", "warlock", "wizard"]},
+        {"id": "ray_of_frost", "name_pl": "Promień Mrozu", "name_en": "Ray of Frost", "classes": ["sorcerer", "wizard"]},
+        {"id": "sacred_flame", "name_pl": "Święty Płomień", "name_en": "Sacred Flame", "classes": ["cleric"]},
+        {"id": "shillelagh", "name_pl": "Kij", "name_en": "Shillelagh", "classes": ["druid"]},
+        {"id": "shocking_grasp", "name_pl": "Porażający Uścisk", "name_en": "Shocking Grasp", "classes": ["sorcerer", "wizard"]},
+        {"id": "thaumaturgy", "name_pl": "Taumaturgia", "name_en": "Thaumaturgy", "classes": ["cleric"]},
+        {"id": "vicious_mockery", "name_pl": "Okrutna Drwina", "name_en": "Vicious Mockery", "classes": ["bard"]}
+    ],
+    "level_1": [
+        {"id": "alarm", "name_pl": "Alarm", "name_en": "Alarm", "classes": ["ranger", "wizard"]},
+        {"id": "animal_friendship", "name_pl": "Przyjaźń Zwierząt", "name_en": "Animal Friendship", "classes": ["bard", "druid", "ranger"]},
+        {"id": "bane", "name_pl": "Zguba", "name_en": "Bane", "classes": ["bard", "cleric"]},
+        {"id": "bless", "name_pl": "Błogosławieństwo", "name_en": "Bless", "classes": ["cleric", "paladin"]},
+        {"id": "burning_hands", "name_pl": "Płonące Dłonie", "name_en": "Burning Hands", "classes": ["sorcerer", "wizard"]},
+        {"id": "charm_person", "name_pl": "Zauroczenie Osoby", "name_en": "Charm Person", "classes": ["bard", "druid", "sorcerer", "warlock", "wizard"]},
+        {"id": "color_spray", "name_pl": "Barwne Kaskady", "name_en": "Color Spray", "classes": ["sorcerer", "wizard"]},
+        {"id": "command", "name_pl": "Rozkaz", "name_en": "Command", "classes": ["cleric", "paladin"]},
+        {"id": "comprehend_languages", "name_pl": "Zrozumienie Języków", "name_en": "Comprehend Languages", "classes": ["bard", "sorcerer", "warlock", "wizard"]},
+        {"id": "cure_wounds", "name_pl": "Leczenie Ran", "name_en": "Cure Wounds", "classes": ["bard", "cleric", "druid", "paladin", "ranger"]},
+        {"id": "detect_magic", "name_pl": "Wykrycie Magii", "name_en": "Detect Magic", "classes": ["bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "wizard"]},
+        {"id": "disguise_self", "name_pl": "Zmiana Wyglądu", "name_en": "Disguise Self", "classes": ["bard", "sorcerer", "wizard"]},
+        {"id": "entangle", "name_pl": "Oplątanie", "name_en": "Entangle", "classes": ["druid"]},
+        {"id": "faerie_fire", "name_pl": "Ogień Faerie", "name_en": "Faerie Fire", "classes": ["bard", "druid"]},
+        {"id": "feather_fall", "name_pl": "Piórkowe Opadanie", "name_en": "Feather Fall", "classes": ["bard", "sorcerer", "wizard"]},
+        {"id": "find_familiar", "name_pl": "Znalezienie Chowańca", "name_en": "Find Familiar", "classes": ["wizard"]},
+        {"id": "guiding_bolt", "name_pl": "Naprowadzający Pocisk", "name_en": "Guiding Bolt", "classes": ["cleric"]},
+        {"id": "healing_word", "name_pl": "Lecznicze Słowo", "name_en": "Healing Word", "classes": ["bard", "cleric", "druid"]},
+        {"id": "hellish_rebuke", "name_pl": "Piekielna Reprymenda", "name_en": "Hellish Rebuke", "classes": ["warlock"]},
+        {"id": "heroism", "name_pl": "Heroizm", "name_en": "Heroism", "classes": ["bard", "paladin"]},
+        {"id": "hex", "name_pl": "Klątwa", "name_en": "Hex", "classes": ["warlock"]},
+        {"id": "identify", "name_pl": "Identyfikacja", "name_en": "Identify", "classes": ["bard", "wizard"]},
+        {"id": "inflict_wounds", "name_pl": "Zadawanie Ran", "name_en": "Inflict Wounds", "classes": ["cleric"]},
+        {"id": "mage_armor", "name_pl": "Zbroja Maga", "name_en": "Mage Armor", "classes": ["sorcerer", "wizard"]},
+        {"id": "magic_missile", "name_pl": "Magiczny Pocisk", "name_en": "Magic Missile", "classes": ["sorcerer", "wizard"]},
+        {"id": "sanctuary", "name_pl": "Sanktuarium", "name_en": "Sanctuary", "classes": ["cleric"]},
+        {"id": "shield", "name_pl": "Tarcza", "name_en": "Shield", "classes": ["sorcerer", "wizard"]},
+        {"id": "sleep", "name_pl": "Uśpienie", "name_en": "Sleep", "classes": ["bard", "sorcerer", "wizard"]},
+        {"id": "thunderwave", "name_pl": "Fala Gromu", "name_en": "Thunderwave", "classes": ["bard", "druid", "sorcerer", "wizard"]}
+    ]
 }
 
 STAT_NAMES = {

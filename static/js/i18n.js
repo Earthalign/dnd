@@ -41,6 +41,7 @@ const TRANSLATIONS = {
         badge_class: 'Klasa',
         badge_human: 'Człowiek',
         btn_generate: 'Wygeneruj Gotową Kartę Postaci PDF 📥',
+        btn_spellbook: '📖 Wirtualna Księga Zaklęć (Otwórz generator kart)',
         valid_ok: 'Wszystkie warunki są spełnione! Karta postaci jest gotowa do pobrania.',
         valid_header: 'Wymagania do spełnienia:',
         err_points: 'Musisz wykorzystać dokładnie 27 punktów w systemie Point Buy (aktualnie pozostało: {n} pkt).',
@@ -122,6 +123,7 @@ const TRANSLATIONS = {
         badge_class: 'Class',
         badge_human: 'Human',
         btn_generate: 'Generate Character Sheet PDF 📥',
+        btn_spellbook: '📖 Virtual Spellbook (Open Cards Generator)',
         valid_ok: 'All requirements met! Character sheet is ready to download.',
         valid_header: 'Requirements to fulfill:',
         err_points: 'You must spend exactly 27 points in Point Buy (remaining: {n} pts).',
@@ -196,3 +198,7 @@ function setLanguage(lang) {
     // Refresh dynamic UI
     if (typeof updateUI === 'function') updateUI();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    setLanguage(currentLang);
+});
