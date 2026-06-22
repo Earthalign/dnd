@@ -1,19 +1,25 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import os
 
-from character import build_character_sheet, auto_assign_stats_try_harder, auto_assign_stats_balanced, validate_point_buy
-from dnd_data import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS
+from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS
+from app.schemas.character import CharacterCreateSchema
+from app.services.character import (
+    build_character_sheet,
+    auto_assign_stats_try_harder,
+    auto_assign_stats_balanced,
+    validate_point_buy
+)
+from app.services.pdf import generate_character_pdf
 
 app = FastAPI(title="D&D 5e Character Creator")
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Setup szablonów HTML
-templates = Jinja2Templates(directory="templates")
+# Setup HTML templates
+templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -35,7 +41,7 @@ async def spellbook(request: Request):
 
 @app.post("/api/auto-stats")
 async def api_auto_stats(data: dict):
-    """Endpoint zwracający automatycznie przydzielone statystyki."""
+    """Endpoint returning automatically distributed stats based on mode."""
     mode = data.get("mode", "try_harder")
     char_class = data.get("char_class", "fighter")
     race = data.get("race", "human")
@@ -49,64 +55,37 @@ async def api_auto_stats(data: dict):
 
 @app.post("/generate-pdf")
 async def generate_pdf(request: Request):
-    form_data_raw = await request.form()
+    # Parse form data through Pydantic schema
+    form_data = await CharacterCreateSchema.from_form(request)
     
-    # Wyciągnięcie atrybutów bazowych do walidacji Point Buy
-    stats = {
-        "str": int(form_data_raw.get("strength", 10)),
-        "dex": int(form_data_raw.get("dexterity", 10)),
-        "con": int(form_data_raw.get("constitution", 10)),
-        "int": int(form_data_raw.get("intelligence", 10)),
-        "wis": int(form_data_raw.get("wisdom", 10)),
-        "cha": int(form_data_raw.get("charisma", 10)),
-    }
-    
-    # Pobieranie trybu generowania atrybutów
-    stat_mode = form_data_raw.get("stat_mode", "point_buy")
-    
-    # Walidacja Point Buy
-    if stat_mode == "point_buy":
-        is_valid, err_msg = validate_point_buy(stats)
+    # Validate Point Buy if selected
+    if form_data.stat_mode == "point_buy":
+        stats_to_validate = {
+            "str": form_data.strength,
+            "dex": form_data.dexterity,
+            "con": form_data.constitution,
+            "int": form_data.intelligence,
+            "wis": form_data.wisdom,
+            "cha": form_data.charisma,
+        }
+        is_valid, err_msg = validate_point_buy(stats_to_validate)
         if not is_valid:
-            from fastapi import HTTPException
             raise HTTPException(status_code=400, detail=err_msg)
-        
-    # Budowanie słownika form_data
-    form_data = dict(form_data_raw)
-    
-    # Przemapowanie nazw atrybutów z formularza HTML (strength -> str) na te używane w character.py
-    form_data["str"] = stats["str"]
-    form_data["dex"] = stats["dex"]
-    form_data["con"] = stats["con"]
-    form_data["int"] = stats["int"]
-    form_data["wis"] = stats["wis"]
-    form_data["cha"] = stats["cha"]
-    
-    # Pobieranie list wielokrotnego wyboru (biegłości i ekspertyzy)
-    form_data["skills"] = form_data_raw.getlist("skills")
-    form_data["expertise"] = form_data_raw.getlist("expertise")
-    
-    # Pobieranie wybranych czarów
-    form_data["selected_cantrips"] = form_data_raw.getlist("selected_cantrips")
-    form_data["selected_spells_1"] = form_data_raw.getlist("selected_spells_1")
-    
-    form_data["level"] = int(form_data.get("level", 1))
-    
+            
+    # Build complete character sheet calculations
     sheet = build_character_sheet(form_data)
     
-    # Dodaj czary do sheeta (w PL)
-    from dnd_data import SPELLS as SPELLS_DATA
-    
+    # Map selected spells to Polish names for the PDF sheet
     cantrip_names = []
-    for spell_id in form_data.get("selected_cantrips", []):
-        for s in SPELLS_DATA.get("cantrip", []):
+    for spell_id in form_data.selected_cantrips:
+        for s in SPELLS.get("cantrip", []):
             if s["id"] == spell_id:
                 cantrip_names.append(s["name_pl"])
                 break
     
     spell1_names = []
-    for spell_id in form_data.get("selected_spells_1", []):
-        for s in SPELLS_DATA.get("level_1", []):
+    for spell_id in form_data.selected_spells_1:
+        for s in SPELLS.get("level_1", []):
             if s["id"] == spell_id:
                 spell1_names.append(s["name_pl"])
                 break
@@ -114,10 +93,21 @@ async def generate_pdf(request: Request):
     sheet["cantrip_names"] = cantrip_names
     sheet["spell1_names"] = spell1_names
     
-    # Generowanie unikalnego PDF w katalogu
-    name = form_data.get("name", "Bohater")
-    pdf_path = f"character_{name.replace(' ', '_')}.pdf"
-    from utils.pdf_generator import generate_character_pdf
-    generate_character_pdf(sheet, pdf_path)
+    # Generate PDF in-memory (returning bytes)
+    try:
+        pdf_bytes = generate_character_pdf(sheet)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Błąd generowania PDF: {str(e)}")
     
-    return FileResponse(pdf_path, media_type='application/pdf', filename=pdf_path)
+    filename = f"character_{form_data.name.replace(' ', '_')}.pdf"
+    
+    # Send PDF byte stream as attachment
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
