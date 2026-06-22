@@ -1,0 +1,241 @@
+/* ============================================
+   D&D 5e Character Creator - Main Stylesheet
+   ============================================ */
+
+/* --- Base & Typography --- */
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: #0b0b0e;
+    background-image:
+        radial-gradient(at 0% 0%, rgba(40, 25, 55, 0.25) 0px, transparent 50%),
+        radial-gradient(at 50% 0%, rgba(20, 30, 50, 0.25) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(55, 20, 25, 0.25) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+h1, h2, h3, h4, .font-rpg {
+    font-family: 'Cinzel', serif;
+}
+
+/* --- RPG Panel (glassmorphism cards) --- */
+.rpg-panel {
+    background: rgba(18, 18, 24, 0.75);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rpg-panel:hover {
+    border-color: rgba(212, 175, 55, 0.3);
+    box-shadow: 0 12px 40px 0 rgba(212, 175, 55, 0.05);
+}
+.rpg-panel-header {
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* --- Form Inputs --- */
+.input-rpg {
+    background-color: rgba(10, 10, 14, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+.input-rpg:focus {
+    border-color: rgba(212, 175, 55, 0.6);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+    outline: none;
+}
+
+/* --- Stat +/- Buttons --- */
+.btn-rpg-stat {
+    background: rgba(30, 30, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #d1d5db;
+    transition: all 0.15s ease;
+}
+.btn-rpg-stat:hover:not(:disabled) {
+    background: #d4af37;
+    color: #0b0b0e;
+    border-color: #d4af37;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+.btn-rpg-stat:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0b0b0e; }
+::-webkit-scrollbar-thumb {
+    background: #1e1e26;
+    border-radius: 4px;
+    border: 1px solid rgba(212, 175, 55, 0.1);
+}
+::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+
+/* ============================================
+   Language Toggle
+   ============================================ */
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(15, 15, 20, 0.9);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 9999px;
+    padding: 3px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+.lang-btn {
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+}
+.lang-btn.active {
+    background: linear-gradient(135deg, #d4af37, #b8962e);
+    color: #0b0b0e;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+.lang-btn:not(.active):hover {
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.08);
+}
+
+/* ============================================
+   Dice Rolling Modal
+   ============================================ */
+.dice-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.dice-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+.dice-modal {
+    background: rgba(18, 18, 28, 0.95);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 1.5rem;
+    padding: 2rem 2.5rem;
+    max-width: 620px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(212,175,55,0.08);
+    transform: scale(0.92);
+    transition: transform 0.3s ease;
+}
+.dice-overlay.active .dice-modal {
+    transform: scale(1);
+}
+
+/* 3D Dice Scene */
+.scene {
+    width: 50px;
+    height: 50px;
+    perspective: 400px;
+    margin: 0 4px;
+}
+.cube {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateZ(-25px);
+}
+.cube.rolling {
+    animation: spinCube 0.6s infinite linear;
+}
+@keyframes spinCube {
+    0% { transform: translateZ(-25px) rotateX(0deg) rotateY(0deg); }
+    100% { transform: translateZ(-25px) rotateX(360deg) rotateY(360deg); }
+}
+
+/* Single die face */
+.cube__face {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    font-weight: 800;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: rgba(30, 30, 42, 0.95);
+    color: #e5e7eb;
+    font-family: 'Cinzel', serif;
+    line-height: 1;
+}
+
+.cube__face--1  { transform: rotateY(  0deg) translateZ(25px); }
+.cube__face--2  { transform: rotateY( 90deg) translateZ(25px); }
+.cube__face--3  { transform: rotateY(180deg) translateZ(25px); }
+.cube__face--4  { transform: rotateY(-90deg) translateZ(25px); }
+.cube__face--5  { transform: rotateX( 90deg) translateZ(25px); }
+.cube__face--6  { transform: rotateX(-90deg) translateZ(25px); }
+
+.cube.kept .cube__face {
+    border-color: rgba(52, 211, 153, 0.6);
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    box-shadow: inset 0 0 10px rgba(52, 211, 153, 0.2);
+}
+.cube.dropped .cube__face {
+    border-color: rgba(244, 63, 94, 0.35);
+    background: rgba(244, 63, 94, 0.1);
+    color: #9ca3af;
+    opacity: 0.45;
+}
+
+/* Stat row in dice modal */
+.dice-stat-row {
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    opacity: 0.3;
+    transition: opacity 0.4s ease;
+}
+.dice-stat-row.active,
+.dice-stat-row.done {
+    opacity: 1;
+}
+.dice-stat-result {
+    font-family: 'Cinzel', serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #d4af37;
+    min-width: 3rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.dice-stat-row.done .dice-stat-result {
+    opacity: 1;
+}
+
+/* PDF language note */
+.pdf-lang-note {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 0.75rem;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #a5b4fc;
+    text-align: center;
+}

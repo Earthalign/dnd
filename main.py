@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS
+from app.core import progression
 from app.schemas.character import CharacterCreateSchema
 from app.services.character import (
     build_character_sheet,
@@ -31,7 +32,19 @@ async def index(request: Request):
             "races": RACES,
             "backgrounds": BACKGROUNDS,
             "skills": SKILLS,
-            "spells": SPELLS
+            "spells": SPELLS,
+            "progression": {
+                "PROFICIENCY_BY_LEVEL": progression.PROFICIENCY_BY_LEVEL,
+                "SUBCLASS_LEVEL": progression.SUBCLASS_LEVEL,
+                "SUBCLASSES": progression.SUBCLASSES,
+                "CANTRIPS_KNOWN": progression.CANTRIPS_KNOWN,
+                "SPELLS_KNOWN": progression.SPELLS_KNOWN,
+                "FULL_CASTER_SLOTS": progression.FULL_CASTER_SLOTS,
+                "HALF_CASTER_SLOTS": progression.HALF_CASTER_SLOTS,
+                "THIRD_CASTER_SLOTS": progression.THIRD_CASTER_SLOTS,
+                "WARLOCK_SLOTS": progression.WARLOCK_SLOTS,
+                "CASTER_TYPE": progression.CASTER_TYPE
+            }
         }
     )
 
@@ -83,15 +96,17 @@ async def generate_pdf(request: Request):
                 cantrip_names.append(s["name_pl"])
                 break
     
-    spell1_names = []
-    for spell_id in form_data.selected_spells_1:
-        for s in SPELLS.get("level_1", []):
-            if s["id"] == spell_id:
-                spell1_names.append(s["name_pl"])
-                break
-    
     sheet["cantrip_names"] = cantrip_names
-    sheet["spell1_names"] = spell1_names
+    
+    for level in range(1, 10):
+        spell_names = []
+        selected = getattr(form_data, f"selected_spells_{level}")
+        for spell_id in selected:
+            for s in SPELLS.get(f"level_{level}", []):
+                if s["id"] == spell_id:
+                    spell_names.append(s["name_pl"])
+                    break
+        sheet[f"spell{level}_names"] = spell_names
     
     # Generate PDF in-memory (returning bytes)
     try:

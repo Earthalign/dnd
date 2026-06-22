@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page_title">Kreator Postaci D&D 5e</title>
     <!-- Google Fonts for premium RPG typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
@@ -23,11 +25,17 @@
         </div>
 
         <header class="text-center mb-10 border-b border-amber-600/20 pb-6 relative">
-            <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-            <h1 class="text-4xl md:text-5xl font-black text-amber-500 tracking-wider uppercase font-serif drop-shadow-[0_2px_10px_rgba(212,175,55,0.25)]" data-i18n="page_title">Kreator Postaci D&D 5e</h1>
-            <p class="text-gray-400 mt-3 text-sm font-sans tracking-wide" data-i18n="page_subtitle">Zbuduj swojego bohatera zgodnie z oficjalnymi zasadami Player's Handbook</p>
+            <div
+                class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent">
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black text-amber-500 tracking-wider uppercase font-serif drop-shadow-[0_2px_10px_rgba(212,175,55,0.25)]"
+                data-i18n="page_title">Kreator Postaci D&D 5e</h1>
+            <p class="text-gray-400 mt-3 text-sm font-sans tracking-wide" data-i18n="page_subtitle">Zbuduj swojego
+                bohatera zgodnie z oficjalnymi zasadami Player's Handbook</p>
             <div class="mt-4 flex justify-center">
-                <a href="/spellbook" class="inline-flex items-center gap-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200 shadow-[0_0_10px_rgba(99,102,241,0.2)]" target="_blank" data-i18n="btn_spellbook">
+                <a href="/spellbook"
+                    class="inline-flex items-center gap-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200 shadow-[0_0_10px_rgba(99,102,241,0.2)]"
+                    target="_blank" data-i18n="btn_spellbook">
                     📖 Wirtualna Księga Zaklęć (Otwórz generator kart)
                 </a>
             </div>
@@ -40,20 +48,23 @@
             <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6">
                 <div class="rpg-panel-header pb-3">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
-                        <span class="text-amber-600 font-bold font-mono">I.</span> <span data-i18n="section_identity">Kim jesteś?</span>
+                        <span class="text-amber-600 font-bold font-mono">I.</span> <span
+                            data-i18n="section_identity">Kim jesteś?</span>
                     </h2>
                 </div>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1" data-i18n="lbl_name">Imię Postaci</label>
+                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                            data-i18n="lbl_name">Imię Postaci</label>
                         <input type="text" name="name" value="Bohater" required
                             class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm">
                     </div>
 
                     <div class="grid grid-cols-3 gap-4">
                         <div class="col-span-2">
-                            <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1" data-i18n="lbl_class">Klasa</label>
+                            <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                                data-i18n="lbl_class">Klasa</label>
                             <select name="char_class" id="char_class" onchange="updateUI()"
                                 class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
                                 {% for key, val in classes.items() %}
@@ -62,19 +73,36 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1" data-i18n="lbl_level">Poziom</label>
-                            <input type="number" name="level" value="1" min="1" max="20" readonly
-                                class="w-full input-rpg rounded-lg px-3 py-2.5 text-center text-white font-bold text-sm bg-gray-900/60 cursor-not-allowed">
+                            <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                                data-i18n="lbl_level">Poziom</label>
+                            <input type="number" name="level" id="level" value="1" min="1" max="20" onchange="updateUI()"
+                                class="w-full input-rpg rounded-lg px-3 py-2.5 text-center text-white font-bold text-sm cursor-pointer">
                         </div>
                     </div>
 
+                    <!-- Dynamic Subclass Selection -->
+                    <div id="subclass-container" class="hidden">
+                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                            data-i18n="lbl_subclass">Subklasa</label>
+                        <select name="subclass" id="subclass" onchange="updateUI()"
+                            class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
+                        </select>
+                    </div>
+                    
+                    <!-- Dynamic Subclass Info -->
+                    <div id="subclass-details-card" class="bg-gray-950/40 border border-gray-800 rounded-xl p-3.5 space-y-2 hidden">
+                        <!-- Filled in JS -->
+                    </div>
+
                     <!-- Dynamic Class Info -->
-                    <div id="class-details-card" class="bg-gray-950/40 border border-gray-800 rounded-xl p-3.5 space-y-2">
+                    <div id="class-details-card"
+                        class="bg-gray-950/40 border border-gray-800 rounded-xl p-3.5 space-y-2">
                         <!-- Filled in JS -->
                     </div>
 
                     <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1" data-i18n="lbl_race">Rasa</label>
+                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                            data-i18n="lbl_race">Rasa</label>
                         <select name="race" id="race" onchange="updateUI()"
                             class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
                             {% for key, val in races.items() %}
@@ -84,12 +112,14 @@
                     </div>
 
                     <!-- Dynamic Race Info -->
-                    <div id="race-details-card" class="bg-gray-950/40 border border-gray-800 rounded-xl p-3.5 space-y-2">
+                    <div id="race-details-card"
+                        class="bg-gray-950/40 border border-gray-800 rounded-xl p-3.5 space-y-2">
                         <!-- Filled in JS -->
                     </div>
 
                     <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1" data-i18n="lbl_background">Pochodzenie (Background)</label>
+                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                            data-i18n="lbl_background">Pochodzenie (Background)</label>
                         <select name="background" id="background" onchange="updateUI()"
                             class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
                             {% for key, val in backgrounds.items() %}
@@ -104,7 +134,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1" data-i18n="lbl_alignment">Charakter (Alignment)</label>
+                        <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
+                            data-i18n="lbl_alignment">Charakter (Alignment)</label>
                         <input type="text" name="alignment" value="Neutralny" required
                             class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm">
                     </div>
@@ -113,37 +144,47 @@
 
             <!-- COLUMN 2: ATTRIBUTES & POINT BUY -->
             <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6 lg:col-span-2">
-                <div class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div
+                    class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
-                        <span class="text-amber-600 font-bold font-mono">II.</span> <span data-i18n="section_stats">Atrybuty i Statystyki</span>
+                        <span class="text-amber-600 font-bold font-mono">II.</span> <span
+                            data-i18n="section_stats">Atrybuty i Statystyki</span>
                     </h2>
-                    
+
                     <div class="flex gap-2 w-full sm:w-auto flex-wrap">
                         <button type="button" onclick="loadAutoStats('try_harder')"
-                            class="flex-1 sm:flex-initial bg-rose-950 hover:bg-rose-900 border border-rose-700/50 hover:border-rose-500 text-rose-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.1)]" data-i18n="btn_try_harder">
+                            class="flex-1 sm:flex-initial bg-rose-950 hover:bg-rose-900 border border-rose-700/50 hover:border-rose-500 text-rose-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.1)]"
+                            data-i18n="btn_try_harder">
                             Auto: Try Harder 💪
                         </button>
                         <button type="button" onclick="loadAutoStats('balanced')"
-                            class="flex-1 sm:flex-initial bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 hover:border-indigo-500 text-indigo-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(99,102,241,0.1)]" data-i18n="btn_balanced">
+                            class="flex-1 sm:flex-initial bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 hover:border-indigo-500 text-indigo-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(99,102,241,0.1)]"
+                            data-i18n="btn_balanced">
                             Auto: Balanced ⚖️
                         </button>
                         <button type="button" onclick="openDiceModal()"
-                            class="flex-1 sm:flex-initial bg-amber-950 hover:bg-amber-900 border border-amber-700/50 hover:border-amber-500 text-amber-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(212,175,55,0.1)]" data-i18n="btn_roll_dice">
+                            class="flex-1 sm:flex-initial bg-amber-950 hover:bg-amber-900 border border-amber-700/50 hover:border-amber-500 text-amber-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(212,175,55,0.1)]"
+                            data-i18n="btn_roll_dice">
                             🎲 Losuj Kości
                         </button>
                     </div>
                 </div>
 
                 <!-- Point Buy Header Display -->
-                <div class="bg-gray-950/60 border border-amber-500/20 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-5 shadow-inner">
+                <div
+                    class="bg-gray-950/60 border border-amber-500/20 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-5 shadow-inner">
                     <div class="flex-1 text-center md:text-left">
-                        <h3 class="text-base font-bold text-amber-400 font-serif" data-i18n="point_buy_title">System Kupowania Punktów</h3>
-                        <p class="text-xs text-gray-400 mt-1 max-w-md" data-i18n="point_buy_desc" data-i18n-html="true">Bazowy zakres: 8 - 15. Koszt rośnie nieliniowo (14: 7pkt, 15: 9pkt). Musisz rozdać <strong>dokładnie wszystkie 27 punktów</strong>!</p>
+                        <h3 class="text-base font-bold text-amber-400 font-serif" data-i18n="point_buy_title">System
+                            Kupowania Punktów</h3>
+                        <p class="text-xs text-gray-400 mt-1 max-w-md" data-i18n="point_buy_desc" data-i18n-html="true">
+                            Bazowy zakres: 8 - 15. Koszt rośnie nieliniowo (14: 7pkt, 15: 9pkt). Musisz rozdać
+                            <strong>dokładnie wszystkie 27 punktów</strong>!</p>
                     </div>
                     <div class="flex items-center gap-4 bg-gray-900/80 border border-gray-800 rounded-xl px-5 py-2.5">
                         <div class="text-center">
                             <span id="point-pool" class="text-4xl font-black text-amber-500 font-serif">27</span>
-                            <span class="text-xs text-gray-500 block" id="point-pool-text" data-i18n="pool_remaining">Pozostało</span>
+                            <span class="text-xs text-gray-500 block" id="point-pool-text"
+                                data-i18n="pool_remaining">Pozostało</span>
                         </div>
                         <div class="text-[10px] text-gray-500 border-l border-gray-800 pl-4 leading-relaxed font-mono">
                             8: 0 pkt | 9: 1 pkt | 10: 2 pkt<br>
@@ -156,31 +197,36 @@
                 <!-- Stats Rows -->
                 <div class="space-y-3.5">
                     {% for key, pyKey, name in [
-                        ('strength', 'str', 'Siła (STR)'),
-                        ('dexterity', 'dex', 'Zręczność (DEX)'),
-                        ('constitution', 'con', 'Kondycja (CON)'),
-                        ('intelligence', 'int', 'Inteligencja (INT)'),
-                        ('wisdom', 'wis', 'Mądrość (WIS)'),
-                        ('charisma', 'cha', 'Charyzma (CHA)')
+                    ('strength', 'str', 'Siła (STR)'),
+                    ('dexterity', 'dex', 'Zręczność (DEX)'),
+                    ('constitution', 'con', 'Kondycja (CON)'),
+                    ('intelligence', 'int', 'Inteligencja (INT)'),
+                    ('wisdom', 'wis', 'Mądrość (WIS)'),
+                    ('charisma', 'cha', 'Charyzma (CHA)')
                     ] %}
-                    <div class="relative bg-gray-900/40 border border-gray-800/85 hover:border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 transition duration-200">
+                    <div
+                        class="relative bg-gray-900/40 border border-gray-800/85 hover:border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 transition duration-200">
                         <!-- Stat details -->
                         <div class="flex items-center gap-3 w-full sm:w-1/3">
-                            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold font-serif text-sm">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold font-serif text-sm">
                                 {{ pyKey.upper() }}
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-200 text-sm font-sans" data-i18n="stat_{{ pyKey }}">{{ name }}</h3>
-                                <span class="text-[10px] text-gray-500 block uppercase tracking-wider" id="{{ pyKey }}-primary-hint"></span>
+                                <h3 class="font-bold text-gray-200 text-sm font-sans" data-i18n="stat_{{ pyKey }}">{{
+                                    name }}</h3>
+                                <span class="text-[10px] text-gray-500 block uppercase tracking-wider"
+                                    id="{{ pyKey }}-primary-hint"></span>
                             </div>
                         </div>
-                        
+
                         <!-- Points adjustment -->
                         <div class="flex items-center gap-3.5 w-full sm:w-1/3 justify-center">
                             <button type="button" id="{{ pyKey }}-btn-dec" onclick="changeStat('{{ pyKey }}', -1)"
                                 class="btn-rpg-stat w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">-</button>
                             <div class="flex flex-col items-center">
-                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold" data-i18n="lbl_base">Bazowa</span>
+                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
+                                    data-i18n="lbl_base">Bazowa</span>
                                 <input type="number" id="{{ key }}" name="{{ key }}" value="10" readonly
                                     class="w-10 bg-transparent text-center text-base font-bold text-gray-300 focus:outline-none border-none pointer-events-none">
                             </div>
@@ -191,16 +237,22 @@
                         <!-- Outputs and Modifiers -->
                         <div class="flex items-center justify-end gap-6 w-full sm:w-1/3">
                             <div class="flex flex-col items-center">
-                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold" data-i18n="lbl_race_bonus">Rasa</span>
-                                <span id="{{ pyKey }}-racial" class="text-xs px-2 py-0.5 rounded font-bold font-mono">0</span>
+                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
+                                    data-i18n="lbl_race_bonus">Rasa</span>
+                                <span id="{{ pyKey }}-racial"
+                                    class="text-xs px-2 py-0.5 rounded font-bold font-mono">0</span>
                             </div>
                             <div class="flex flex-col items-center">
-                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold" data-i18n="lbl_total">Wynik</span>
-                                <span id="{{ pyKey }}-final" class="text-2xl font-black text-amber-400 font-serif">10</span>
+                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
+                                    data-i18n="lbl_total">Wynik</span>
+                                <span id="{{ pyKey }}-final"
+                                    class="text-2xl font-black text-amber-400 font-serif">10</span>
                             </div>
                             <div class="flex flex-col items-center">
-                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold mb-0.5" data-i18n="lbl_mod">Mod.</span>
-                                <div id="{{ pyKey }}-mod" class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm font-mono">
+                                <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold mb-0.5"
+                                    data-i18n="lbl_mod">Mod.</span>
+                                <div id="{{ pyKey }}-mod"
+                                    class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm font-mono">
                                     +0
                                 </div>
                             </div>
@@ -212,13 +264,16 @@
 
             <!-- COLUMN 3: SKILL PROFICIENCIES & EXPERTISE -->
             <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6 lg:col-span-3">
-                <div class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div
+                    class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
-                        <span class="text-amber-600 font-bold font-mono">III.</span> <span data-i18n="section_skills">Biegłości i Umiejętności</span>
+                        <span class="text-amber-600 font-bold font-mono">III.</span> <span
+                            data-i18n="section_skills">Biegłości i Umiejętności</span>
                     </h2>
-                    
+
                     <!-- Derived stats preview -->
-                    <div class="flex gap-4 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2">
+                    <div
+                        class="flex gap-4 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2">
                         <div>
                             <span class="text-gray-400" data-i18n="lbl_prof_bonus">Premia z biegłości:</span>
                             <span class="text-amber-400 font-mono font-bold ml-1">+2</span>
@@ -241,16 +296,20 @@
                 <!-- Expertise Section (Rogue Only) -->
                 <div id="expertise-section" class="hidden bg-amber-950/10 border border-amber-500/20 rounded-xl p-4">
                     <h3 class="text-sm font-bold text-amber-400 font-serif flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+                        <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                        </svg>
                         Wiedza Eksperta (Expertise)
                     </h3>
                     <p class="text-xs text-gray-400 mt-0.5" id="expertise-info">
-                        Jako łotrzyk, wybierz 2 umiejętności, w których masz już biegłość. Twój bonus biegłości w nich zostanie podwojony!
+                        Jako łotrzyk, wybierz 2 umiejętności, w których masz już biegłość. Twój bonus biegłości w nich
+                        zostanie podwojony!
                     </p>
                 </div>
 
                 <!-- Skill limits / Selection helper banner -->
-                <div id="skill-selection-banner" class="bg-gray-950/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-gray-300">
+                <div id="skill-selection-banner"
+                    class="bg-gray-950/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-gray-300">
                     <span id="skill-selection-info" class="leading-relaxed">Obliczanie dostępnych biegłości...</span>
                 </div>
 
@@ -261,14 +320,18 @@
 
                 <!-- SECTION IV: SPELL SELECTION (only for spellcasting classes) -->
                 <div id="spell-section" class="hidden mt-6 rpg-panel p-6 rounded-2xl flex flex-col gap-6 lg:col-span-3">
-                    <div class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div
+                        class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
-                            <span class="text-amber-600 font-bold font-mono">IV.</span> <span data-i18n="section_spells">Zaklęcia i Magia</span>
+                            <span class="text-amber-600 font-bold font-mono">IV.</span> <span
+                                data-i18n="section_spells">Zaklęcia i Magia</span>
                         </h2>
-                        <div class="flex gap-4 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2" id="spellcasting-stats-header">
+                        <div class="flex gap-4 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2"
+                            id="spellcasting-stats-header">
                             <div>
                                 <span class="text-gray-400" data-i18n="lbl_spell_ability">Zdolność czarowania:</span>
-                                <span class="text-amber-400 font-mono font-bold ml-1" id="spell-ability-preview">—</span>
+                                <span class="text-amber-400 font-mono font-bold ml-1"
+                                    id="spell-ability-preview">—</span>
                             </div>
                             <div class="border-l border-gray-800 pl-4">
                                 <span class="text-gray-400" data-i18n="lbl_spell_dc">ST Rzutu Obronnego:</span>
@@ -281,28 +344,8 @@
                         </div>
                     </div>
 
-                    <!-- Cantrips -->
-                    <div>
-                        <h3 class="text-sm font-bold text-amber-400 mb-2 flex items-center gap-2">
-                            <span class="bg-amber-500/20 border border-amber-500/30 text-amber-300 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-mono">Lvl 0</span>
-                            <span data-i18n="lbl_cantrips">Sztuczki (Cantrips)</span>
-                            <span class="text-gray-500 text-xs ml-auto" id="cantrip-count">0 / 0</span>
-                        </h3>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2" id="cantrip-list">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <!-- Level 1 Spells -->
-                    <div>
-                        <h3 class="text-sm font-bold text-amber-400 mb-2 flex items-center gap-2">
-                            <span class="bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-mono">Lvl 1</span>
-                            <span data-i18n="lbl_spells_1">Zaklęcia 1. poziomu</span>
-                            <span class="text-gray-500 text-xs ml-auto" id="spell1-count">0 / 0</span>
-                        </h3>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2" id="spell1-list">
-                            <!-- Populated by JS -->
-                        </div>
+                    <div id="dynamic-spells-container" class="space-y-6">
+                        <!-- Spells populated by JS -->
                     </div>
                 </div>
 
@@ -313,7 +356,8 @@
                     </div>
 
                     <button type="submit" id="submit-btn" disabled
-                        class="w-full py-4 rounded bg-gray-800 text-gray-500 border border-gray-700 font-black text-xl uppercase tracking-widest cursor-not-allowed opacity-50 transition duration-300" data-i18n="btn_generate">
+                        class="w-full py-4 rounded bg-gray-800 text-gray-500 border border-gray-700 font-black text-xl uppercase tracking-widest cursor-not-allowed opacity-50 transition duration-300"
+                        data-i18n="btn_generate">
                         Wygeneruj Gotową Kartę Postaci PDF 📥
                     </button>
                 </div>
@@ -331,8 +375,10 @@
     <div class="dice-overlay" id="dice-overlay">
         <div class="dice-modal">
             <div class="text-center mb-6">
-                <h3 id="dice-modal-title" class="text-2xl font-bold text-amber-400 font-serif">🎲 Losowanie Statystyk</h3>
-                <p id="dice-modal-subtitle" class="text-xs text-gray-400 mt-1">Rzut 5k6 – odrzuć 2 najniższe, sumuj 3 najwyższe</p>
+                <h3 id="dice-modal-title" class="text-2xl font-bold text-amber-400 font-serif">🎲 Losowanie Statystyk
+                </h3>
+                <p id="dice-modal-subtitle" class="text-xs text-gray-400 mt-1">Rzut 5k6 – odrzuć 2 najniższe, sumuj 3
+                    najwyższe</p>
             </div>
 
             <!-- Stats Rows Container -->
@@ -360,21 +406,22 @@
 
     <!-- Footer: Author Info -->
     <footer class="mt-16 border-t border-gray-800/60 py-6">
-        <div class="container mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div
+            class="container mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div class="flex items-center gap-2 text-gray-500 text-xs">
                 <span class="text-amber-600/70 font-bold font-serif text-base">⚔</span>
-                <span>D&amp;D 5e Character Creator &mdash; Fan-made tool, not affiliated with Wizards of the Coast</span>
+                <span>D&amp;D 5e Character Creator &mdash; Fan-made tool, not affiliated with Wizards of the
+                    Coast</span>
             </div>
             <div class="flex items-center gap-2 text-xs text-gray-500">
                 <span>Crafted by</span>
-                <a href="https://earthalign.github.io/witoldwluczkowski/strona2.html"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="font-bold text-amber-500 hover:text-amber-400 transition duration-200 underline underline-offset-2 decoration-amber-600/40">
+                <a href="https://earthalign.github.io/witoldwluczkowski/strona2.html" target="_blank"
+                    rel="noopener noreferrer"
+                    class="font-bold text-amber-500 hover:text-amber-400 transition duration-200 underline underline-offset-2 decoration-amber-600/40">
                     Witold Włuczkowski
                 </a>
                 <span class="text-gray-700">|</span>
-                <span class="text-gray-600">2025</span>
+                <span class="text-gray-600">2026</span>
             </div>
         </div>
     </footer>
@@ -389,6 +436,7 @@
         window.BACKGROUNDS = {{ backgrounds | tojson }};
         window.SKILLS = {{ skills | tojson }};
         window.SPELLS_DATA = {{ spells | tojson }};
+        window.PROGRESSION = {{ progression | tojson }};
     </script>
     <script src="/static/js/creator.js"></script>
 </body>

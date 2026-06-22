@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wirtualna Księga Zaklęć (Spellbook)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/spellbook.css">
+</head>
+<body>
+
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="no-print">
+        <header class="text-center mb-8 border-b border-amber-600/20 pb-6">
+            <h1 class="text-4xl font-black text-amber-500 font-serif drop-shadow-[0_2px_10px_rgba(212,175,55,0.25)]">📖 Wirtualna Księga Zaklęć</h1>
+            <p class="text-gray-400 mt-2 text-sm">Przeglądaj czary i generuj własne karty do druku (PDF)! Wyszukujemy z D&D 5e API.</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <a href="/" class="text-amber-500 hover:text-amber-400 text-sm font-bold uppercase tracking-wider">&larr; Wróć do Kreatora Postaci</a>
+            </div>
+        </header>
+
+        <div class="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-1">
+                <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">Klasa Czarująca</label>
+                <select id="class-select" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-white text-sm" onchange="loadSpells()">
+                    <option value="">Wybierz klasę...</option>
+                    <option value="bard">Bard</option>
+                    <option value="cleric">Cleric (Kleryk)</option>
+                    <option value="druid">Druid</option>
+                    <option value="paladin">Paladin (Paladyn)</option>
+                    <option value="ranger">Ranger (Łowca)</option>
+                    <option value="sorcerer">Sorcerer (Zaklinacz)</option>
+                    <option value="warlock">Warlock (Czarnoksiężnik)</option>
+                    <option value="wizard">Wizard (Czarodziej)</option>
+                </select>
+            </div>
+            <div class="flex-1">
+                <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">Poziom Czaru</label>
+                <select id="level-select" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-white text-sm" onchange="filterSpells()">
+                    <option value="all">Wszystkie</option>
+                    <option value="0">Cantrip (Sztuczka)</option>
+                    <option value="1">1st Level</option>
+                    <option value="2">2nd Level</option>
+                    <option value="3">3rd Level</option>
+                    <option value="4">4th Level</option>
+                    <option value="5">5th Level</option>
+                    <option value="6">6th Level</option>
+                    <option value="7">7th Level</option>
+                    <option value="8">8th Level</option>
+                    <option value="9">9th Level</option>
+                </select>
+            </div>
+            <div>
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Drukuj Karty (PDF)
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center text-amber-500 font-serif text-xl hidden my-12">
+            Ładowanie zwojów... ✨
+        </div>
+    </div>
+
+    <!-- Print / Cards Container -->
+    <div id="spell-container" class="spell-grid print-container">
+        <!-- Cards injected here -->
+    </div>
+</div>
+
+<script src="/static/js/spellbook.js"></script>
+
+</body>
+</html>
