@@ -32,17 +32,23 @@
                 data-i18n="page_title">Kreator Postaci D&D 5e</h1>
             <p class="text-gray-400 mt-3 text-sm font-sans tracking-wide" data-i18n="page_subtitle">Zbuduj swojego
                 bohatera zgodnie z oficjalnymi zasadami Player's Handbook</p>
-            <div class="mt-4 flex justify-center">
+            <div class="mt-4 flex justify-center gap-3 flex-wrap">
                 <a href="/spellbook"
                     class="inline-flex items-center gap-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200 shadow-[0_0_10px_rgba(99,102,241,0.2)]"
                     target="_blank" data-i18n="btn_spellbook">
                     📖 Wirtualna Księga Zaklęć (Otwórz generator kart)
                 </a>
+                <button type="button" id="auto-gen-btn" onclick="autoGenerateCharacter()"
+                    class="inline-flex items-center gap-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/50 text-emerald-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                    🎲 Losuj całą postać
+                </button>
             </div>
         </header>
 
         <form action="/generate-pdf" method="POST" id="char-creator-form" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <input type="hidden" id="stat_mode" name="stat_mode" value="point_buy">
+            <input type="hidden" id="asi_slots_json" name="asi_slots_json" value="">
+            <input type="hidden" id="human_variant_feat_hidden" name="human_variant_feat" value="">
 
             <!-- COLUMN 1: IDENTITY -->
             <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6">
@@ -65,7 +71,7 @@
                         <div class="col-span-2">
                             <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
                                 data-i18n="lbl_class">Klasa</label>
-                            <select name="char_class" id="char_class" onchange="updateUI()"
+                            <select name="char_class" id="char_class" onchange="updateUI();renderEquipmentSection()"
                                 class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
                                 {% for key, val in classes.items() %}
                                 <option value="{{ key }}">{{ val.name }} ({{ val.primary_ability }})</option>
@@ -268,7 +274,7 @@
                     class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
                         <span class="text-amber-600 font-bold font-mono">III.</span> <span
-                            data-i18n="section_skills">Biegłości i Umiejętności</span>
+                            data-i18n="section_skills">Biegłości, Atuty i Umiejętności</span>
                     </h2>
 
                     <!-- Derived stats preview -->
@@ -305,6 +311,22 @@
                         Jako łotrzyk, wybierz 2 umiejętności, w których masz już biegłość. Twój bonus biegłości w nich
                         zostanie podwojony!
                     </p>
+                </div>
+
+                <!-- Feats Section -->
+                <div id="feats-section" class="hidden bg-indigo-950/10 border border-indigo-500/20 rounded-xl p-4 mt-2">
+                    <h3 class="text-sm font-bold text-indigo-400 font-serif flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        Atuty (Feats)
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5" id="feats-info">
+                        Wybierz atuty dostępne dla twojego poziomu postaci.
+                    </p>
+                    <div id="feats-container" class="mt-3 space-y-2">
+                        <!-- Loaded dynamically via JS -->
+                    </div>
                 </div>
 
                 <!-- Skill limits / Selection helper banner -->
@@ -346,6 +368,20 @@
 
                     <div id="dynamic-spells-container" class="space-y-6">
                         <!-- Spells populated by JS -->
+                    </div>
+                </div>
+
+                <!-- SECTION V: STARTING EQUIPMENT -->
+                <div id="equipment-section" class="hidden mt-6 rpg-panel p-6 rounded-2xl flex flex-col gap-4 lg:col-span-3">
+                    <div class="rpg-panel-header pb-3">
+                        <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
+                            <span class="text-amber-600 font-bold font-mono">V.</span>
+                            <span>⚔️ Ekwipunek Startowy</span>
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-1">Wybierz jeden pakiet ekwipunku startowego odpowiedni dla swojej klasy. Każdy pakiet zawiera broń i opcjonalną zbroję.</p>
+                    </div>
+                    <div id="equipment-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Loaded by JS -->
                     </div>
                 </div>
 
@@ -436,7 +472,11 @@
         window.BACKGROUNDS = {{ backgrounds | tojson }};
         window.SKILLS = {{ skills | tojson }};
         window.SPELLS_DATA = {{ spells | tojson }};
+        window.FEATS = {{ feats | tojson }};
         window.PROGRESSION = {{ progression | tojson }};
+        window.CLASS_EQUIPMENT = {{ class_equipment | tojson }};
+        window.WEAPONS = {{ weapons | tojson }};
+        window.ARMORS = {{ armors | tojson }};
     </script>
     <script src="/static/js/creator.js"></script>
 </body>

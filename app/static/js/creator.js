@@ -22,8 +22,14 @@ const state = {
     },
     skillsSelected: new Set(),
     expertiseSelected: new Set(),
+    // ASI slots: each slot = { type: 'feat'|'+2'|'+1+1', feat: '', stat1: '', stat2: '' }
+    asiSlots: [],
     statMode: 'point_buy',
     selectedCantrips: new Set(),
+    // Selected equipment package id
+    selectedEquipment: null,
+    // Human Variant: free feat at lv1
+    humanVariantFeat: '',
 };
 for (let i = 1; i <= 9; i++) {
     state[`selectedSpells${i}`] = new Set();
@@ -183,6 +189,15 @@ function toggleSpell(level, spellId, isChecked) {
     updateUI();
 }
 
+function toggleFeat(featKey, isChecked) {
+    if (isChecked) {
+        state.featsSelected.add(featKey);
+    } else {
+        state.featsSelected.delete(featKey);
+    }
+    updateUI();
+}
+
 function updateUI() {
     const raceKey = document.getElementById('race').value;
     const classKey = document.getElementById('char_class').value;
@@ -323,7 +338,7 @@ function updateUI() {
     const passivePerception = 10 + wisMod + (hasPerception ? 2 : 0);
     document.getElementById('perception-preview').innerText = passivePerception;
     
-    // Armor Class calculation
+    // Armor Class calculation — considers selected equipment armor
     const finalCon = state.baseStats['con'] + getRacialBonus('con', raceKey);
     const conMod = getModifier(finalCon);
     let acVal = 10 + dexMod;
@@ -331,6 +346,34 @@ function updateUI() {
         acVal = 10 + dexMod + conMod;
     } else if (classKey === 'monk') {
         acVal = 10 + dexMod + wisMod;
+    } else {
+        // Check selected equipment package for armor
+        const EQUIPMENT = window.CLASS_EQUIPMENT;
+        if (state.selectedEquipment && EQUIPMENT && EQUIPMENT[classKey]) {
+            const pkg = (EQUIPMENT[classKey].options || []).find(o => o.id === state.selectedEquipment);
+            if (pkg && pkg.armor && window.ARMORS) {
+                const armorKey = pkg.armor;
+                const armorAcTable = {
+                    'leather': 11 + dexMod,
+                    'padded': 11 + dexMod,
+                    'studded_leather': 12 + dexMod,
+                    'hide': 12 + Math.min(dexMod, 2),
+                    'chain_shirt': 13 + Math.min(dexMod, 2),
+                    'scale_mail': 14 + Math.min(dexMod, 2),
+                    'breastplate': 14 + Math.min(dexMod, 2),
+                    'half_plate': 15 + Math.min(dexMod, 2),
+                    'ring_mail': 14,
+                    'chain_mail': 16,
+                    'splint': 17,
+                    'plate': 18,
+                    'none': 10 + dexMod,
+                };
+                if (armorKey in armorAcTable) {
+                    acVal = armorAcTable[armorKey];
+                    if (pkg.shield) acVal += 2;
+                }
+            }
+        }
     }
     document.getElementById('ac-preview').innerText = acVal;
     
@@ -493,6 +536,92 @@ function updateUI() {
     } else {
         expertiseSection.classList.add('hidden');
         state.expertiseSelected.clear();
+    }
+
+    // 4b. Update ASI/Feat Section (D&D 5e compliant)
+    // Each ASI level: player chooses +2 to one stat, +1 to two stats, OR a feat
+    const asiLevels = (PROGRESSION.ASI_LEVELS[classKey] || []).filter(l => level >= l);
+    const numAsis = asiLevels.length;
+    // Human Variant gets a free feat slot at level 1
+    const isHumanVariant = (raceKey === 'human_variant');
+    const totalFeatSlots = numAsis + (isHumanVariant ? 1 : 0);
+
+    // Normalize state.asiSlots to match numAsis
+    while (state.asiSlots.length < numAsis) state.asiSlots.push({ type: 'feat', feat: '', stat1: '', stat2: '' });
+    if (state.asiSlots.length > numAsis) state.asiSlots.splice(numAsis);
+
+    const featsSection = document.getElementById('feats-section');
+    if ((numAsis > 0 || isHumanVariant) && featsSection) {
+        featsSection.classList.remove('hidden');
+        const featsContainer = document.getElementById('feats-container');
+        featsContainer.innerHTML = '';
+
+        const allStats = ['str','dex','con','int','wis','cha'];
+        const statLabels = { str:'Siła (STR)', dex:'Zręczność (DEX)', con:'Kondycja (CON)', int:'Inteligencja (INT)', wis:'Mądrość (WIS)', cha:'Charyzma (CHA)' };
+        const featList = window.FEATS ? Object.keys(window.FEATS).sort((a,b)=>window.FEATS[a].name.localeCompare(window.FEATS[b].name)) : [];
+
+        // Build all slot HTML at once to avoid innerHTML+= mutation issues
+        let allSlotsHtml = '';
+
+        // Render human_variant free feat slot first
+        if (isHumanVariant) {
+            const hfeat = state.humanVariantFeat;
+            allSlotsHtml += `<div class="p-3 bg-purple-950/20 border border-purple-500/30 rounded-xl">`;
+            allSlotsHtml += `<div class="text-xs font-bold text-purple-400 mb-2">🎖 Bonus Człowieka Wariantu: Bezpłatny Atut</div>`;
+            allSlotsHtml += `<select name="human_variant_feat" onchange="state.humanVariantFeat=this.value;updateUI()" class="w-full input-rpg rounded-lg px-2 py-1.5 text-white text-xs">`;
+            allSlotsHtml += `<option value="">— Wybierz atut —</option>`;
+            featList.forEach(fk => { allSlotsHtml += `<option value="${fk}" ${hfeat===fk?'selected':''}>${window.FEATS[fk].name}</option>`; });
+            allSlotsHtml += `</select>`;
+            if (hfeat && window.FEATS[hfeat]) allSlotsHtml += `<p class="text-[10px] text-gray-400 mt-1.5">${window.FEATS[hfeat].desc}</p>`;
+            allSlotsHtml += `</div>`;
+        }
+
+        // Render each ASI slot
+        state.asiSlots.forEach((slot, idx) => {
+            const lvlLabel = `Poz. ${asiLevels[idx]}`;
+            allSlotsHtml += `<div class="p-3 bg-indigo-950/10 border border-indigo-500/20 rounded-xl">`;
+            allSlotsHtml += `<div class="text-xs font-bold text-indigo-400 mb-2">⬆ Poprawa Cechy (ASI) – ${lvlLabel}: Wybierz jedno</div>`;
+            // Type chooser
+            allSlotsHtml += `<div class="flex gap-2 mb-2">`;
+            [['feat','🎖 Atut'],['+2','+2 do jednej cechy'],['+1+1','+1 do dwóch cech']].forEach(([val,lbl]) => {
+                const active = slot.type === val ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-gray-900 text-gray-400 border-gray-700 hover:border-gray-500';
+                allSlotsHtml += `<button type="button" onclick="setAsiType(${idx},'${val}')" class="text-[10px] font-bold px-2 py-1 rounded border ${active} transition-all duration-150">${lbl}</button>`;
+            });
+            allSlotsHtml += `</div>`;
+
+            if (slot.type === 'feat') {
+                allSlotsHtml += `<select name="asi_feat_${idx}" onchange="setAsiFeat(${idx},this.value)" class="w-full input-rpg rounded-lg px-2 py-1.5 text-white text-xs mb-1">`;
+                allSlotsHtml += `<option value="">— Wybierz atut —</option>`;
+                featList.forEach(fk => { allSlotsHtml += `<option value="${fk}" ${slot.feat===fk?'selected':''}>${window.FEATS[fk].name}</option>`; });
+                allSlotsHtml += `</select>`;
+                if (slot.feat && window.FEATS[slot.feat]) allSlotsHtml += `<p class="text-[10px] text-gray-400">${window.FEATS[slot.feat].desc}</p>`;
+            } else if (slot.type === '+2') {
+                allSlotsHtml += `<select name="asi_stat2_${idx}" onchange="setAsiStat1(${idx},this.value)" class="w-full input-rpg rounded-lg px-2 py-1.5 text-white text-xs">`;
+                allSlotsHtml += `<option value="">— Wybierz cechę (+2) —</option>`;
+                allStats.forEach(s => { allSlotsHtml += `<option value="${s}" ${slot.stat1===s?'selected':''}>${statLabels[s]}</option>`; });
+                allSlotsHtml += `</select>`;
+            } else { // +1+1
+                allSlotsHtml += `<div class="flex gap-2">`;
+                allSlotsHtml += `<select name="asi_stat1a_${idx}" onchange="setAsiStat1(${idx},this.value)" class="flex-1 input-rpg rounded-lg px-2 py-1.5 text-white text-xs">`;
+                allSlotsHtml += `<option value="">— Cecha 1 (+1) —</option>`;
+                allStats.forEach(s => { allSlotsHtml += `<option value="${s}" ${slot.stat1===s?'selected':''}>${statLabels[s]}</option>`; });
+                allSlotsHtml += `</select>`;
+                allSlotsHtml += `<select name="asi_stat2a_${idx}" onchange="setAsiStat2(${idx},this.value)" class="flex-1 input-rpg rounded-lg px-2 py-1.5 text-white text-xs">`;
+                allSlotsHtml += `<option value="">— Cecha 2 (+1) —</option>`;
+                allStats.forEach(s => { allSlotsHtml += `<option value="${s}" ${slot.stat2===s?'selected':''}>${statLabels[s]}</option>`; });
+                allSlotsHtml += `</select></div>`;
+            }
+            allSlotsHtml += `</div>`;
+        });
+
+        featsContainer.innerHTML = allSlotsHtml;
+
+        // Info header
+        const infoEl = document.getElementById('feats-info');
+        infoEl.innerHTML = `Poziomy ASI dla twojej klasy: <strong>${(PROGRESSION.ASI_LEVELS[classKey]||[]).join(', ')}</strong>. Na każdym możesz wziąć atut <em>lub</em> podnieść statystyki.${isHumanVariant?' Jako Człowiek Wariant – masz <strong>bezpłatny atut</strong> już na poziomie 1.':''}`;
+    } else if (featsSection) {
+        featsSection.classList.add('hidden');
+        // Don't clear asiSlots when hiding — preserve selections if level changes back
     }
 
     // 5. Update Spell Selection Section
@@ -797,26 +926,104 @@ function updateDetailsInfo(raceKey, classKey, bgKey, level = 1, subclassKey = nu
     if (charClass) {
         const className = useEn && charClass.name_en ? charClass.name_en : charClass.name;
         const classDesc = useEn && charClass.description_en ? charClass.description_en : charClass.description;
-        let featuresHtml = charClass.features_1.map(f => `<li class="text-xs text-gray-400 leading-normal">• ${f}</li>`).join('');
+        
+        let allFeaturesHtml = '';
+        if (PROGRESSION.CLASS_FEATURES && PROGRESSION.CLASS_FEATURES[classKey]) {
+            for (let l = 1; l <= level; l++) {
+                if (PROGRESSION.CLASS_FEATURES[classKey][l]) {
+                    const featsList = PROGRESSION.CLASS_FEATURES[classKey][l];
+                    const levelLabel = useEn ? `Level ${l}` : `Poziom ${l}`;
+                    allFeaturesHtml += `<div class="mt-2"><div class="text-[10px] uppercase font-bold tracking-widest text-amber-300 mb-1 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${levelLabel}</div>`;
+                    featsList.forEach(f => {
+                        allFeaturesHtml += `<div class="text-xs text-gray-400 pl-3 leading-normal border-l border-gray-800 ml-0.5 py-0.5">• ${f}</div>`;
+                    });
+                    allFeaturesHtml += `</div>`;
+                }
+            }
+        } else {
+            allFeaturesHtml = charClass.features_1.map(f => `<li class="text-xs text-gray-400 leading-normal">• ${f}</li>`).join('');
+        }
+        
         let savesHtml = charClass.saving_throws.map(s => 
             `<span class="text-[9px] font-bold bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 px-2 py-0.5 rounded font-mono">${s.toUpperCase()}</span>`
         ).join(' ');
         
+        // Spellcasting info for caster classes — show spell slots table
+        let spellInfoHtml = '';
+        if (charClass.spellcasting) {
+            const limits = getSpellLimits(classKey, level, subclassKey);
+            const statLabel = (charClass.spellcasting_stat || '').toUpperCase();
+            const isPrepared = ['cleric','druid','paladin','wizard'].includes(classKey);
+            const spellSystem = isPrepared ? (useEn ? 'Prepared' : 'Przygotowane') : (useEn ? 'Known' : 'Znane');
+            let spellFormula = '';
+            if (isPrepared) {
+                if (classKey === 'paladin') {
+                    spellFormula = useEn ? `${statLabel} mod + ½ level (min 1)` : `mod ${statLabel} + ½ poziom (min 1)`;
+                } else {
+                    spellFormula = useEn ? `${statLabel} mod + level (min 1)` : `mod ${statLabel} + poziom (min 1)`;
+                }
+            }
+
+            // Build spell slot table for current level
+            const casterType = PROGRESSION.CASTER_TYPE[classKey];
+            let slotTableHtml = '';
+            let slotsData = null;
+            if (casterType === 'full') {
+                const keys = Object.keys(PROGRESSION.FULL_CASTER_SLOTS).map(Number).sort((a,b)=>a-b);
+                for (let l of keys) { if (level >= l) slotsData = PROGRESSION.FULL_CASTER_SLOTS[l]; }
+            } else if (casterType === 'half') {
+                const keys = Object.keys(PROGRESSION.HALF_CASTER_SLOTS).map(Number).sort((a,b)=>a-b);
+                for (let l of keys) { if (level >= l) slotsData = PROGRESSION.HALF_CASTER_SLOTS[l]; }
+            } else if (casterType === 'pact') {
+                const keys = Object.keys(PROGRESSION.WARLOCK_SLOTS).map(Number).sort((a,b)=>a-b);
+                let wd = null;
+                for (let l of keys) { if (level >= l) wd = PROGRESSION.WARLOCK_SLOTS[l]; }
+                if (wd) {
+                    slotTableHtml = `<span class="text-[9px] font-bold bg-purple-950 border border-purple-700/40 text-purple-300 px-2 py-0.5 rounded font-mono">`;
+                    slotTableHtml += `${useEn ? 'Pact Slots' : 'Sloty Paktu'}: ${wd.slots}x Poz.${wd.slot_level}</span>`;
+                }
+            }
+            if (slotsData && slotsData.length > 0) {
+                slotTableHtml = slotsData.map((count, idx) => count > 0 ?
+                    `<span class="text-[9px] font-bold bg-indigo-950 border border-indigo-700/40 text-indigo-300 px-2 py-0.5 rounded font-mono">P${idx+1}: ${count}</span>` : ''
+                ).join('');
+            }
+
+            spellInfoHtml = `
+                <div class="mt-2 p-2 rounded-lg bg-indigo-950/20 border border-indigo-500/20">
+                    <span class="text-[10px] font-bold text-indigo-400 block uppercase tracking-wider mb-1.5">✨ ${useEn ? 'Spellcasting' : 'Rzucanie zaklęć'} (${statLabel})</span>
+                    <div class="flex flex-wrap gap-1.5 mb-1.5">
+                        <span class="text-[9px] font-bold bg-indigo-950 border border-indigo-700/40 text-indigo-300 px-2 py-0.5 rounded font-mono">
+                            ${useEn ? 'Cantrips' : 'Sztuczki'}: ${limits.cantrips}
+                        </span>
+                        <span class="text-[9px] font-bold bg-indigo-950 border border-indigo-700/40 text-indigo-300 px-2 py-0.5 rounded font-mono">
+                            ${spellSystem}: ${limits.spells_known}${spellFormula ? ` (${spellFormula})` : ''}
+                        </span>
+                        <span class="text-[9px] font-bold bg-indigo-950 border border-indigo-700/40 text-indigo-300 px-2 py-0.5 rounded font-mono">
+                            ${useEn ? 'Max lvl' : 'Max poz.'}: ${limits.max_spell_level || '—'}
+                        </span>
+                    </div>
+                    ${slotTableHtml ? `<div class="text-[9px] font-bold text-indigo-400/70 mb-1 uppercase tracking-wider">${useEn ? 'Spell Slots:' : 'Sloty zaklęć:'}</div><div class="flex flex-wrap gap-1">${slotTableHtml}</div>` : ''}
+                </div>
+            `;
+        }
+
         document.getElementById('class-details-card').innerHTML = `
             <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-gray-850 pb-1.5">
-                    <span class="text-xs font-bold text-amber-500 font-serif">${t('card_class')}: ${className}</span>
-                    <span class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">${t('card_class_traits')}</span>
+                    <span class="text-xs font-bold text-amber-500 font-serif">${t('card_class') || 'Klasa'}: ${className}</span>
+                    <span class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">${t('card_class_traits') || 'Cechy'}</span>
                 </div>
                 <p class="text-xs text-gray-400 italic">${classDesc}</p>
                 <div class="flex flex-wrap gap-1.5 pt-0.5">
-                    <span class="text-[9px] font-bold bg-rose-500/10 border border-rose-500/25 text-rose-400 px-2 py-0.5 rounded font-mono">${t('card_hit_die')}: d${charClass.hit_die}</span>
-                    <span class="text-[9px] font-bold bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">${t('card_saves')}</span>
+                    <span class="text-[9px] font-bold bg-rose-500/10 border border-rose-500/25 text-rose-400 px-2 py-0.5 rounded font-mono">${t('card_hit_die') || 'Kość'}: d${charClass.hit_die}</span>
+                    <span class="text-[9px] font-bold bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">${t('card_saves') || 'Rzuty Obronne'}</span>
                     ${savesHtml}
                 </div>
+                ${spellInfoHtml}
                 <div class="border-t border-gray-850/80 pt-2 space-y-1.5">
-                    <span class="text-[10px] font-bold text-amber-400/90 block uppercase tracking-wider">${t('card_start_feats')}</span>
-                    <ul class="space-y-1">${featuresHtml}</ul>
+                    <span class="text-[10px] font-bold text-amber-400/90 block uppercase tracking-wider">${useEn ? `Abilities (up to level ${level})` : `Zdolności (do poz. ${level})`}</span>
+                    <div class="space-y-1">${allFeaturesHtml}</div>
                 </div>
             </div>
         `;
@@ -886,37 +1093,157 @@ function toggleExpertise(skillKey, isChecked) {
 async function loadAutoStats(mode) {
     const char_class = document.getElementById('char_class').value;
     const race = document.getElementById('race').value;
-
-    // Simple loading feedback
     const poolEl = document.getElementById('point-pool');
-    poolEl.innerText = "...";
+    poolEl.innerText = '...';
 
     const response = await fetch('/api/auto-stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode, char_class, race })
     });
-
     const data = await response.json();
-    
-    const pyToAbbr = { str: 'str', dex: 'dex', con: 'con', int: 'int', wis: 'wis', cha: 'cha' };
     for (const [pyKey, val] of Object.entries(data.stats)) {
-        const abbr = pyToAbbr[pyKey];
-        if (abbr) {
-            state.baseStats[abbr] = val;
-        }
+        if (state.baseStats.hasOwnProperty(pyKey)) state.baseStats[pyKey] = val;
     }
-    
-    // Clear selections on auto stats load to avoid invalid combinations
     state.skillsSelected.clear();
     state.expertiseSelected.clear();
     state.selectedCantrips.clear();
-    state.selectedSpells1.clear();
+    for (let i = 1; i <= 9; i++) state[`selectedSpells${i}`].clear();
     state.statMode = 'point_buy';
     document.getElementById('stat_mode').value = 'point_buy';
-    
     updateUI();
+}
+
+// ASI slot helpers
+function setAsiType(idx, type) {
+    if (!state.asiSlots[idx]) return;
+    state.asiSlots[idx] = { type, feat: '', stat1: '', stat2: '' };
+    updateUI();
+}
+function setAsiFeat(idx, feat) {
+    if (!state.asiSlots[idx]) return;
+    state.asiSlots[idx].feat = feat;
+    updateUI();
+}
+function setAsiStat1(idx, stat) {
+    if (!state.asiSlots[idx]) return;
+    state.asiSlots[idx].stat1 = stat;
+    updateUI();
+}
+function setAsiStat2(idx, stat) {
+    if (!state.asiSlots[idx]) return;
+    state.asiSlots[idx].stat2 = stat;
+    updateUI();
+}
+
+// Equipment section rendering
+function renderEquipmentSection() {
+    const classKey = document.getElementById('char_class').value;
+    const eqSection = document.getElementById('equipment-section');
+    const eqContainer = document.getElementById('equipment-container');
+    if (!eqSection || !eqContainer) return;
+
+    const EQUIPMENT = window.CLASS_EQUIPMENT;
+    if (!EQUIPMENT || !EQUIPMENT[classKey]) {
+        eqSection.classList.add('hidden');
+        return;
+    }
+    eqSection.classList.remove('hidden');
+    eqContainer.innerHTML = '';
+
+    const options = EQUIPMENT[classKey].options;
+    options.forEach(opt => {
+        const isSelected = state.selectedEquipment === opt.id;
+        const borderClass = isSelected ? 'border-amber-500/60 bg-amber-950/15' : 'border-gray-800 bg-gray-900/30 hover:border-gray-700';
+        const weaponNames = (opt.weapons || []).map(wId => {
+            const w = window.WEAPONS && window.WEAPONS[wId];
+            return w ? `${w.name} (${w.damage} ${w.type})` : wId;
+        }).join(', ');
+        const armorData = window.ARMORS && window.ARMORS[opt.armor];
+        const armorName = armorData ? armorData.name : (opt.armor || 'Brak');
+        const shieldStr = opt.shield ? ' + Tarcza (+2 KP)' : '';
+
+        eqContainer.innerHTML += `
+            <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${borderClass}">
+                <input type="radio" name="equipment_package" value="${opt.id}" ${isSelected?'checked':''}
+                    onchange="state.selectedEquipment='${opt.id}';updateUI();renderEquipmentSection()"
+                    class="mt-1 w-4 h-4 text-amber-500 bg-gray-900 border-gray-700 focus:ring-amber-500"
+                    style="accent-color:#d4af37">
+                <div class="flex flex-col gap-1 min-w-0">
+                    <span class="font-bold text-gray-200 text-xs">${opt.label}</span>
+                    <div class="flex flex-wrap gap-1.5 mt-0.5">
+                        <span class="text-[9px] font-bold bg-rose-950 border border-rose-700/40 text-rose-300 px-2 py-0.5 rounded font-mono">⚔ ${weaponNames}</span>
+                        <span class="text-[9px] font-bold bg-blue-950 border border-blue-700/40 text-blue-300 px-2 py-0.5 rounded font-mono">🛡 ${armorName}${shieldStr}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-0.5 leading-relaxed italic">${opt.notes || ''}</p>
+                </div>
+            </label>
+        `;
+    });
+}
+
+// === Auto-Generate Full Character ===
+async function autoGenerateCharacter() {
+    const btn = document.getElementById('auto-gen-btn');
+    btn.disabled = true;
+    btn.innerText = '⏳ Generowanie...';
+
+    // Use the level currently selected by the user — don't randomize it!
+    const selectedLevel = parseInt(document.getElementById('level').value) || 1;
+
+    try {
+        const response = await fetch('/api/auto-character', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ level: selectedLevel })
+        });
+        const data = await response.json();
+
+        // Apply basic fields — do NOT overwrite level (user chose it)
+        document.getElementById('char_class').value = data.char_class;
+        document.getElementById('race').value = data.race;
+        document.getElementById('background').value = data.background;
+        // Keep level as user selected
+        document.querySelector('[name=name]').value = data.name;
+        document.querySelector('[name=alignment]').value = data.alignment;
+
+        // Stats
+        for (const [stat, val] of Object.entries(data.stats)) {
+            if (state.baseStats.hasOwnProperty(stat)) state.baseStats[stat] = val;
+        }
+        state.statMode = 'dice';
+        document.getElementById('stat_mode').value = 'dice';
+
+        // Skills
+        state.skillsSelected = new Set(data.skills || []);
+        state.expertiseSelected = new Set(data.expertise || []);
+        state.selectedCantrips = new Set(data.cantrips || []);
+        for (let i = 1; i <= 9; i++) state[`selectedSpells${i}`] = new Set(data[`spells_${i}`] || []);
+
+        // ASI slots
+        state.asiSlots = data.asi_slots || [];
+        state.humanVariantFeat = data.human_variant_feat || '';
+
+        // Equipment
+        state.selectedEquipment = data.equipment_package || null;
+
+        updateUI();
+        renderEquipmentSection();
+    } catch(e) {
+        console.error(e);
+        alert('Błąd podczas generowania postaci.');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = '🎲 Losuj całą postać';
+    }
 }
 
 // Initialize App
 updateUI();
+renderEquipmentSection();
+
+// Sync hidden form fields on submit
+document.getElementById('char-creator-form').addEventListener('submit', () => {
+    document.getElementById('asi_slots_json').value = JSON.stringify(state.asiSlots);
+    document.getElementById('human_variant_feat_hidden').value = state.humanVariantFeat || '';
+});

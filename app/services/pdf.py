@@ -1,10 +1,45 @@
 import os
 import fitz  # pymupdf
 from typing import Dict
+import textwrap
+import urllib.request
+import json
+import concurrent.futures
 
 # Suppress MuPDF low-level stderr warnings (e.g. broken xref tables in PDF templates).
 # These are non-fatal format quirks — Python-level exceptions are still raised on real errors.
 fitz.TOOLS.mupdf_display_errors(False)
+
+def fetch_spell_data(spell_id: str, name_pl: str = None, spell_level: int = 0):
+    try:
+        url = f"https://www.dnd5eapi.co/api/spells/{spell_id.replace('_', '-')}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            return {
+                "id": spell_id,
+                "name_pl": name_pl or data.get("name"),
+                "name_en": data.get("name"),
+                "level": data.get("level", spell_level),
+                "desc": "\n".join(data.get("desc", [])),
+                "casting_time": data.get("casting_time", ""),
+                "range": data.get("range", ""),
+                "components": ", ".join(data.get("components", [])) + (f" ({data.get('material')})" if data.get("material") else ""),
+                "duration": data.get("duration", ""),
+            }
+    except Exception as e:
+        print(f"Błąd pobierania czaru {spell_id}: {e}")
+        return {
+            "id": spell_id,
+            "name_pl": name_pl or spell_id.replace("_", " ").title(),
+            "name_en": spell_id.replace("_", " ").title(),
+            "level": spell_level,
+            "desc": "Opis tego zaklęcia nie jest dostępny w publicznym API (nie znajduje się w SRD). Zobacz odpowiedni podręcznik do D&D 5e.",
+            "casting_time": "?",
+            "range": "?",
+            "components": "?",
+            "duration": "?",
+        }
 
 def generate_character_pdf(char_data: dict) -> bytes:
     """
@@ -213,6 +248,97 @@ def generate_character_pdf(char_data: dict) -> bytes:
                     doc.xref_set_key(widget.xref, "AP", "null")
                 except Exception:
                     pass
+
+    # --- NOWA STRONA: CZARY (SPELLBOOK) ---
+    spell_ids = char_data.get("all_spell_ids", [])
+    if spell_ids:
+        # Pobieranie z API
+        spells_info = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_spell_data, sid, name_pl, lvl) for sid, name_pl, lvl in spell_ids]
+            for future in concurrent.futures.as_completed(futures):
+                res = future.result()
+                if res:
+                    spells_info.append(res)
+        
+        if spells_info:
+            spells_info.sort(key=lambda s: (s['level'], s['name_pl']))
+            
+            CARD_WIDTH = 175
+            CARD_HEIGHT = 245
+            GAP_X = 15
+            GAP_Y = 15
+            # Center the grid on the 595x842 page
+            MARGIN_X = (595 - (3 * CARD_WIDTH + 2 * GAP_X)) / 2
+            MARGIN_Y = (842 - (3 * CARD_HEIGHT + 2 * GAP_Y)) / 2
+            
+            def init_page():
+                p = doc.new_page()
+                try:
+                    p.insert_font(fontname="roboreg", fontfile="app/static/fonts/Roboto-Regular.ttf")
+                    p.insert_font(fontname="robobold", fontfile="app/static/fonts/Roboto-Bold.ttf")
+                except:
+                    pass  # Fallback w przypadku braku pliku
+                return p
+                
+            page = init_page()
+            cards_on_page = 0
+            
+            for spell in spells_info:
+                if cards_on_page >= 9:
+                    page = init_page()
+                    cards_on_page = 0
+                
+                col = cards_on_page % 3
+                row = cards_on_page // 3
+                
+                x = MARGIN_X + col * (CARD_WIDTH + GAP_X)
+                y = MARGIN_Y + row * (CARD_HEIGHT + GAP_Y)
+                
+                # Background and Border
+                rect = fitz.Rect(x, y, x + CARD_WIDTH, y + CARD_HEIGHT)
+                page.draw_rect(rect, color=(0.6, 0.6, 0.6), fill=(1, 1, 1), width=1)
+                
+                # Header Section
+                header_rect = fitz.Rect(x, y, x + CARD_WIDTH, y + 26)
+                page.draw_rect(header_rect, color=(0.6, 0.6, 0.6), fill=(0.95, 0.95, 0.95), width=1)
+                
+                title = str(spell.get('name_pl') or spell.get('name_en') or 'Nieznane')
+                title_en = str(spell.get('name_en') or '')
+                
+                # Używamy insert_text zamiast insert_textbox, żeby uniknąć ucinania tekstu
+                page.insert_text((x+5, y+12), title, fontsize=10, fontname="robobold", color=(0, 0, 0))
+                if title_en:
+                    page.insert_text((x+5, y+22), title_en, fontsize=8, fontname="roboreg", color=(0.4, 0.4, 0.4))
+                
+                # Level/School
+                level_str = "Sztuczka (Cantrip)" if spell['level'] == 0 else f"Poziom {spell['level']}"
+                page.insert_text((x+5, y+36), level_str, fontsize=8, fontname="robobold", color=(0.2, 0.2, 0.2))
+                
+                # Divider 1
+                page.draw_line(fitz.Point(x+5, y+40), fitz.Point(x+CARD_WIDTH-5, y+40), color=(0.8, 0.8, 0.8))
+                
+                # Meta Info
+                meta_y = y + 48
+                page.insert_text((x+5, meta_y), f"Czas: {str(spell.get('casting_time', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
+                page.insert_text((x+5, meta_y+10), f"Zasięg: {str(spell.get('range', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
+                page.insert_text((x+5, meta_y+20), f"Komp: {str(spell.get('components', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
+                page.insert_text((x+5, meta_y+30), f"Trwanie: {str(spell.get('duration', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
+                
+                # Divider 2
+                page.draw_line(fitz.Point(x+5, meta_y+34), fitz.Point(x+CARD_WIDTH-5, meta_y+34), color=(0.8, 0.8, 0.8))
+                
+                # Description
+                desc_rect = fitz.Rect(x+5, meta_y+38, x+CARD_WIDTH-5, y+CARD_HEIGHT-5)
+                desc = str(spell.get('desc', '')).replace("\n", "\n\n")
+                
+                # Ogranicz długość opisu w ostateczności
+                if len(desc) > 800:
+                    desc = desc[:797] + "..."
+                    
+                page.insert_textbox(desc_rect, desc, fontsize=6.5, fontname="roboreg", color=(0, 0, 0))
+                
+                cards_on_page += 1
 
     pdf_bytes = doc.tobytes(garbage=4, deflate=True)
     doc.close()

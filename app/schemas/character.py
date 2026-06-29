@@ -18,6 +18,7 @@ class CharacterCreateSchema(BaseModel):
     stat_mode: str = "point_buy"
     skills: List[str] = Field(default_factory=list)
     expertise: List[str] = Field(default_factory=list)
+    feats: List[str] = Field(default_factory=list)
     subclass: Optional[str] = None
     selected_cantrips: List[str] = Field(default_factory=list)
     selected_spells_1: List[str] = Field(default_factory=list)
@@ -44,6 +45,9 @@ class CharacterCreateSchema(BaseModel):
     equipment: str = ""
     attacks: str = ""
     player: str = ""
+    equipment_package: str = ""
+    asi_slots_json: str = ""  # JSON string of ASI slots
+    human_variant_feat: str = ""
 
     @classmethod
     async def from_form(cls, request: Request) -> "CharacterCreateSchema":
@@ -65,6 +69,7 @@ class CharacterCreateSchema(BaseModel):
             stat_mode=str(form.get("stat_mode", "point_buy")),
             skills=form.getlist("skills"),
             expertise=form.getlist("expertise"),
+            feats=form.getlist("feats"),
             subclass=form.get("subclass", None) if form.get("subclass", "") != "" else None,
             selected_cantrips=form.getlist("selected_cantrips"),
             selected_spells_1=form.getlist("selected_spells_1"),
@@ -91,4 +96,7 @@ class CharacterCreateSchema(BaseModel):
             equipment=str(form.get("equipment", "")),
             attacks=str(form.get("attacks", "")),
             player=str(form.get("player", "")),
+            equipment_package=str(form.get("equipment_package", "")),
+            asi_slots_json=str(form.get("asi_slots_json", "")),
+            human_variant_feat=str(form.get("human_variant_feat", "")),
         )

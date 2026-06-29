@@ -3,16 +3,15 @@ Character creation utilities - stat calculations and auto-assignment logic.
 Based on D&D 5e rules (PHB).
 """
 import math
+import json
 from typing import Dict, List, Tuple
 from app.core.rules import (
-    CLASSES, RACES, BACKGROUNDS, SKILLS, STAT_NAMES,
-    STANDARD_ARRAY, POINT_BUY_COSTS, POINT_BUY_TOTAL, POINT_BUY_MIN, POINT_BUY_MAX,
-    PROFICIENCY_BY_LEVEL, CLASS_STAT_PRIORITY
+    CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, STAT_NAMES,
+    POINT_BUY_COSTS, POINT_BUY_TOTAL, POINT_BUY_MIN, POINT_BUY_MAX,
+    STANDARD_ARRAY, CLASS_STAT_PRIORITY, PROFICIENCY_BY_LEVEL
 )
-from app.core.progression import (
-    CLASS_FEATURES, CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS,
-    WARLOCK_SLOTS, THIRD_CASTER_SLOTS, SUBCLASSES
-)
+from app.core.progression import CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS, THIRD_CASTER_SLOTS, WARLOCK_SLOTS, SUBCLASSES, CLASS_FEATURES
+from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS
 from app.schemas.character import CharacterCreateSchema
 
 
@@ -72,11 +71,11 @@ def apply_racial_asi(base_stats: Dict[str, int], race_key: str) -> Dict[str, int
 def auto_assign_stats_try_harder(char_class: str, race_key: str) -> Dict[str, int]:
     """
     'Try Harder' mode: Assign highest stats to most important attributes for the class.
-    Uses standard array [15, 14, 13, 12, 10, 8].
+    Uses array [15, 15, 15, 8, 8, 8].
     """
     priority = CLASS_STAT_PRIORITY.get(char_class, ["str", "dex", "con", "int", "wis", "cha"])
     stat_keys = ["str", "dex", "con", "int", "wis", "cha"]
-    values = sorted(STANDARD_ARRAY, reverse=True)
+    values = [15, 15, 15, 8, 8, 8]
 
     # Sort stats by priority
     ordered = sorted(stat_keys, key=lambda s: priority.index(s) if s in priority else 99)
@@ -171,6 +170,31 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     # Final stats are base stats + racial ASI
     raw_stats = apply_racial_asi(base_stats, race)
 
+    # Apply ASI bonuses from level-up choices
+    asi_slots = []
+    try:
+        if data.asi_slots_json:
+            asi_slots = json.loads(data.asi_slots_json)
+    except Exception:
+        pass
+
+    asi_feats = []
+    for slot in asi_slots:
+        slot_type = slot.get("type", "feat")
+        if slot_type == "feat" and slot.get("feat"):
+            asi_feats.append(slot["feat"])
+        elif slot_type == "+2" and slot.get("stat1"):
+            raw_stats[slot["stat1"]] = raw_stats.get(slot["stat1"], 10) + 2
+        elif slot_type == "+1+1":
+            if slot.get("stat1"):
+                raw_stats[slot["stat1"]] = raw_stats.get(slot["stat1"], 10) + 1
+            if slot.get("stat2"):
+                raw_stats[slot["stat2"]] = raw_stats.get(slot["stat2"], 10) + 1
+
+    # Human variant free feat
+    if data.human_variant_feat:
+        asi_feats.append(data.human_variant_feat)
+
     class_data = CLASSES.get(char_class, {})
     race_data = RACES.get(race, {})
     bg_data = BACKGROUNDS.get(background, {})
@@ -181,6 +205,7 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     saving_throw_profs = class_data.get("saving_throws", [])
     skill_profs = data.skills
     expertise = data.expertise
+    feats = data.feats
 
     # Modifiers
     mods = {stat: get_modifier(val) for stat, val in raw_stats.items()}
@@ -195,13 +220,41 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     perception_prof = 1 if "postrzeganie" in skill_profs else 0
     passive_perception = 10 + mods["wis"] + (prof_bonus if perception_prof else 0)
 
-    # AC (default unarmored for now)
+    # AC — consider selected equipment package armor
     if char_class == "barbarian":
         ac = 10 + mods["dex"] + mods["con"]
     elif char_class == "monk":
         ac = 10 + mods["dex"] + mods["wis"]
     else:
-        ac = 10 + mods["dex"]
+        ac = 10 + mods["dex"]  # default unarmored
+        # Look up the selected equipment package for armor
+        eq_pkg_id = data.equipment_package
+        if eq_pkg_id:
+            pkg_options = CLASS_EQUIPMENT.get(char_class, {}).get("options", [])
+            for pkg in pkg_options:
+                if pkg["id"] == eq_pkg_id:
+                    armor_key = pkg.get("armor", "none")
+                    has_shield = pkg.get("shield", False)
+                    armor_ac_map = {
+                        "none": 10 + mods["dex"],
+                        "padded": 11 + mods["dex"],
+                        "leather": 11 + mods["dex"],
+                        "studded_leather": 12 + mods["dex"],
+                        "hide": 12 + min(mods["dex"], 2),
+                        "chain_shirt": 13 + min(mods["dex"], 2),
+                        "scale_mail": 14 + min(mods["dex"], 2),
+                        "breastplate": 14 + min(mods["dex"], 2),
+                        "half_plate": 15 + min(mods["dex"], 2),
+                        "ring_mail": 14,
+                        "chain_mail": 16,
+                        "splint": 17,
+                        "plate": 18,
+                    }
+                    if armor_key in armor_ac_map:
+                        ac = armor_ac_map[armor_key]
+                    if has_shield:
+                        ac += 2
+                    break
 
     # Saving throws
     saves = {}
@@ -252,6 +305,26 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         if slot_level > 0:
             spell_slots = {slot_level: slots_count}
 
+    # Build equipment info string — class package + background items
+    equipment_info = ""
+    eq_pkg = data.equipment_package
+    if eq_pkg:
+        pkg_options = CLASS_EQUIPMENT.get(char_class, {}).get("options", [])
+        for pkg in pkg_options:
+            if pkg["id"] == eq_pkg:
+                weapon_names = [WEAPONS[w]["name"] if w in WEAPONS else w for w in pkg.get("weapons", [])]
+                armor_name = ARMORS[pkg["armor"]]["name"] if pkg.get("armor") and pkg["armor"] in ARMORS else ""
+                shield_str = " + Tarcza" if pkg.get("shield") else ""
+                equipment_info = f"{', '.join(weapon_names)} | {armor_name}{shield_str}"
+                break
+    # Add background equipment
+    bg_equipment = bg_data.get("equipment", [])
+    if bg_equipment:
+        bg_eq_str = ", ".join(bg_equipment)
+        equipment_info = (equipment_info + " | " + bg_eq_str).strip(" | ") if equipment_info else bg_eq_str
+    if data.equipment:
+        equipment_info = (equipment_info + " | " + data.equipment).strip(" | ") if equipment_info else data.equipment
+
     return {
         "name": name,
         "player": player,
@@ -276,6 +349,7 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         "skill_bonuses": skill_bonuses,
         "skill_profs": skill_profs,
         "expertise": expertise,
+        "feats": feats,
         "traits": race_data.get("traits", []),
         "class_features": class_features,
         "languages": race_data.get("languages", ["Wspólny"]),
@@ -297,6 +371,7 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         "eyes": data.eyes,
         "skin": data.skin,
         "hair": data.hair,
-        "equipment": data.equipment,
+        "equipment": equipment_info,
         "attacks": data.attacks,
+        "asi_feats": asi_feats,
     }
