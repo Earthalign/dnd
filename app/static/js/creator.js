@@ -639,7 +639,7 @@ function updateUI() {
         allowedCantripClasses.push('wizard');
     }
 
-    const isSpellcaster = (charClass && charClass.spellcasting && (limits.cantrips > 0 || limits.spells1 > 0)) || (raceKey === 'elf_high');
+    const isSpellcaster = (charClass && charClass.spellcasting && (limits.cantrips > 0 || limits.max_spell_level > 0)) || (raceKey === 'elf_high');
     
     if (!isSpellcaster) {
         spellSection.classList.add('hidden');

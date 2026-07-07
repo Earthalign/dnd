@@ -45,13 +45,14 @@
             </div>
         </header>
 
-        <form action="/generate-pdf" method="POST" id="char-creator-form" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form action="/generate-pdf" method="POST" id="char-creator-form" class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             <input type="hidden" id="stat_mode" name="stat_mode" value="point_buy">
             <input type="hidden" id="asi_slots_json" name="asi_slots_json" value="">
             <input type="hidden" id="human_variant_feat_hidden" name="human_variant_feat" value="">
 
             <!-- COLUMN 1: IDENTITY -->
-            <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6">
+            <!-- COLUMN 1: IDENTITY (narrower) -->
+            <div class="rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-6 lg:col-span-5">
                 <div class="rpg-panel-header pb-3">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
                         <span class="text-amber-600 font-bold font-mono">I.</span> <span
@@ -151,27 +152,28 @@
             </div>
 
             <!-- COLUMN 2: ATTRIBUTES & POINT BUY -->
-            <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6">
+            <!-- COLUMN 2: ATTRIBUTES (wider) -->
+            <div class="rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-5 lg:col-span-7">
                 <div
-                    class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    class="rpg-panel-header pb-3 flex flex-col justify-between items-start gap-4">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
                         <span class="text-amber-600 font-bold font-mono">II.</span> <span
                             data-i18n="section_stats">Atrybuty i Statystyki</span>
                     </h2>
 
-                    <div class="flex gap-2 w-full sm:w-auto flex-wrap">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
                         <button type="button" onclick="loadAutoStats('try_harder')"
-                            class="flex-1 sm:flex-initial bg-rose-950 hover:bg-rose-900 border border-rose-700/50 hover:border-rose-500 text-rose-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.1)]"
+                            class="bg-rose-950 hover:bg-rose-900 border border-rose-700/50 hover:border-rose-500 text-rose-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.1)] whitespace-nowrap"
                             data-i18n="btn_try_harder">
                             Auto: Try Harder 💪
                         </button>
                         <button type="button" onclick="loadAutoStats('balanced')"
-                            class="flex-1 sm:flex-initial bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 hover:border-indigo-500 text-indigo-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(99,102,241,0.1)]"
+                            class="bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 hover:border-indigo-500 text-indigo-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(99,102,241,0.1)] whitespace-nowrap"
                             data-i18n="btn_balanced">
                             Auto: Balanced ⚖️
                         </button>
                         <button type="button" onclick="openDiceModal()"
-                            class="flex-1 sm:flex-initial bg-amber-950 hover:bg-amber-900 border border-amber-700/50 hover:border-amber-500 text-amber-200 text-xs font-bold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(212,175,55,0.1)]"
+                            class="bg-amber-950 hover:bg-amber-900 border border-amber-700/50 hover:border-amber-500 text-amber-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(212,175,55,0.1)] whitespace-nowrap"
                             data-i18n="btn_roll_dice">
                             🎲 Losuj Kości
                         </button>
@@ -180,25 +182,27 @@
 
                 <!-- Point Buy Header Display -->
                 <div
-                    class="bg-gray-950/60 border border-amber-500/20 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-5 shadow-inner">
-                    <div class="flex-1 text-center md:text-left">
-                        <h3 class="text-base font-bold text-amber-400 font-serif" data-i18n="point_buy_title">System
-                            Kupowania Punktów</h3>
-                        <p class="text-xs text-gray-400 mt-1 max-w-md" data-i18n="point_buy_desc" data-i18n-html="true">
-                            Bazowy zakres: 8 - 15. Koszt rośnie nieliniowo (14: 7pkt, 15: 9pkt). Musisz rozdać
-                            <strong>dokładnie wszystkie 27 punktów</strong>!
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-4 bg-gray-900/80 border border-gray-800 rounded-xl px-5 py-2.5">
-                        <div class="text-center">
-                            <span id="point-pool" class="text-4xl font-black text-amber-500 font-serif">27</span>
-                            <span class="text-xs text-gray-500 block" id="point-pool-text"
-                                data-i18n="pool_remaining">Pozostało</span>
+                    class="bg-gray-950/60 border border-amber-500/20 rounded-2xl p-4 lg:p-5 shadow-inner">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-sm lg:text-base font-bold text-amber-400 font-serif" data-i18n="point_buy_title">System
+                                Kupowania Punktów</h3>
+                            <p class="text-xs text-gray-400 mt-1" data-i18n="point_buy_desc" data-i18n-html="true">
+                                Bazowy zakres: 8 - 15. Koszt rośnie nieliniowo (14: 7pkt, 15: 9pkt). Musisz rozdać
+                                <strong>dokładnie wszystkie 27 punktów</strong>!
+                            </p>
                         </div>
-                        <div class="text-[10px] text-gray-500 border-l border-gray-800 pl-4 leading-relaxed font-mono">
-                            8: 0 pkt | 9: 1 pkt | 10: 2 pkt<br>
-                            11: 3 pkt | 12: 4 pkt | 13: 5 pkt<br>
-                            14: 7 pkt | 15: 9 pkt
+                        <div class="flex items-center gap-3 bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-2 shrink-0">
+                            <div class="text-center">
+                                <span id="point-pool" class="text-3xl lg:text-4xl font-black text-amber-500 font-serif">27</span>
+                                <span class="text-[10px] text-gray-500 block" id="point-pool-text"
+                                    data-i18n="pool_remaining">Pozostało</span>
+                            </div>
+                            <div class="text-[9px] lg:text-[10px] text-gray-500 border-l border-gray-800 pl-3 leading-relaxed font-mono hidden sm:block">
+                                8: 0 | 9: 1 | 10: 2<br>
+                                11: 3 | 12: 4 | 13: 5<br>
+                                14: 7 | 15: 9
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -214,37 +218,37 @@
                     ('charisma', 'cha', 'Charyzma (CHA)')
                     ] %}
                     <div
-                        class="relative bg-gray-900/40 border border-gray-800/85 hover:border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 transition duration-200">
+                        class="stat-row relative bg-gray-900/40 border border-gray-800/85 hover:border-amber-500/20 rounded-xl p-3 lg:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 transition duration-200">
                         <!-- Stat details -->
-                        <div class="flex items-center gap-3 w-full sm:w-1/3">
+                        <div class="flex items-center gap-2.5 w-full sm:w-auto sm:min-w-[140px]">
                             <div
-                                class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold font-serif text-sm">
+                                class="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold font-serif text-xs lg:text-sm shrink-0">
                                 {{ pyKey.upper() }}
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-200 text-sm font-sans" data-i18n="stat_{{ pyKey }}">{{
+                                <h3 class="font-bold text-gray-200 text-xs lg:text-sm font-sans" data-i18n="stat_{{ pyKey }}">{{
                                     name }}</h3>
-                                <span class="text-[10px] text-gray-500 block uppercase tracking-wider"
+                                <span class="text-[9px] lg:text-[10px] text-gray-500 block uppercase tracking-wider"
                                     id="{{ pyKey }}-primary-hint"></span>
                             </div>
                         </div>
 
                         <!-- Points adjustment -->
-                        <div class="flex items-center gap-3.5 w-full sm:w-1/3 justify-center">
+                        <div class="flex items-center gap-3 justify-center">
                             <button type="button" id="{{ pyKey }}-btn-dec" onclick="changeStat('{{ pyKey }}', -1)"
-                                class="btn-rpg-stat w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">-</button>
+                                class="btn-rpg-stat w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg shrink-0">-</button>
                             <div class="flex flex-col items-center">
                                 <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
                                     data-i18n="lbl_base">Bazowa</span>
                                 <input type="number" id="{{ key }}" name="{{ key }}" value="10" readonly
-                                    class="w-10 bg-transparent text-center text-base font-bold text-gray-300 focus:outline-none border-none pointer-events-none">
+                                    class="w-10 bg-transparent text-center text-sm lg:text-base font-bold text-gray-300 focus:outline-none border-none pointer-events-none">
                             </div>
                             <button type="button" id="{{ pyKey }}-btn-inc" onclick="changeStat('{{ pyKey }}', 1)"
-                                class="btn-rpg-stat w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">+</button>
+                                class="btn-rpg-stat w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg shrink-0">+</button>
                         </div>
 
                         <!-- Outputs and Modifiers -->
-                        <div class="flex items-center justify-end gap-6 w-full sm:w-1/3">
+                        <div class="flex items-center justify-center sm:justify-end gap-4 sm:gap-5">
                             <div class="flex flex-col items-center">
                                 <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
                                     data-i18n="lbl_race_bonus">Rasa</span>
@@ -255,13 +259,13 @@
                                 <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
                                     data-i18n="lbl_total">Wynik</span>
                                 <span id="{{ pyKey }}-final"
-                                    class="text-2xl font-black text-amber-400 font-serif">10</span>
+                                    class="text-xl lg:text-2xl font-black text-amber-400 font-serif">10</span>
                             </div>
                             <div class="flex flex-col items-center">
                                 <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold mb-0.5"
                                     data-i18n="lbl_mod">Mod.</span>
                                 <div id="{{ pyKey }}-mod"
-                                    class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm font-mono">
+                                    class="w-9 h-9 lg:w-10 lg:h-10 rounded-full border flex items-center justify-center font-bold text-xs lg:text-sm font-mono">
                                     +0
                                 </div>
                             </div>
@@ -272,7 +276,8 @@
             </div>
 
             <!-- COLUMN 3: SKILL PROFICIENCIES & EXPERTISE -->
-            <div class="rpg-panel p-6 rounded-2xl flex flex-col gap-6 lg:col-span-2">
+            <!-- COLUMN 3: SKILLS - FULL WIDTH -->
+            <div class="rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-6 lg:col-span-12">
                 <div
                     class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
@@ -282,22 +287,22 @@
 
                     <!-- Derived stats preview -->
                     <div
-                        class="flex gap-4 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2">
-                        <div>
+                        class="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2">
+                        <div class="flex items-center gap-1">
                             <span class="text-gray-400" data-i18n="lbl_prof_bonus">Premia z biegłości:</span>
-                            <span class="text-amber-400 font-mono font-bold ml-1">+2</span>
+                            <span class="text-amber-400 font-mono font-bold">+2</span>
                         </div>
-                        <div class="border-l border-gray-800 pl-4">
+                        <div class="flex items-center gap-1 sm:border-l sm:border-gray-800 sm:pl-4">
                             <span class="text-gray-400" data-i18n="lbl_initiative">Inicjatywa:</span>
-                            <span class="text-amber-400 font-mono font-bold ml-1" id="initiative-preview">+0</span>
+                            <span class="text-amber-400 font-mono font-bold" id="initiative-preview">+0</span>
                         </div>
-                        <div class="border-l border-gray-800 pl-4">
+                        <div class="flex items-center gap-1 sm:border-l sm:border-gray-800 sm:pl-4">
                             <span class="text-gray-400" data-i18n="lbl_passive_perc">Pasywna percepcja:</span>
-                            <span class="text-amber-400 font-mono font-bold ml-1" id="perception-preview">10</span>
+                            <span class="text-amber-400 font-mono font-bold" id="perception-preview">10</span>
                         </div>
-                        <div class="border-l border-gray-800 pl-4">
+                        <div class="flex items-center gap-1 sm:border-l sm:border-gray-800 sm:pl-4">
                             <span class="text-gray-400" data-i18n="lbl_ac">Pancerz (KP):</span>
-                            <span class="text-amber-400 font-mono font-bold ml-1" id="ac-preview">10</span>
+                            <span class="text-amber-400 font-mono font-bold" id="ac-preview">10</span>
                         </div>
                     </div>
                 </div>
@@ -340,32 +345,32 @@
                 </div>
 
                 <!-- Skills Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5" id="skill-list-container">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" id="skill-list-container">
                     <!-- Loaded dynamically via JS -->
                 </div>
 
                 <!-- SECTION IV: SPELL SELECTION (only for spellcasting classes) -->
-                <div id="spell-section" class="hidden mt-6 rpg-panel p-6 rounded-2xl flex flex-col gap-6 lg:col-span-2">
+                <div id="spell-section" class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-6">
                     <div
                         class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
                             <span class="text-amber-600 font-bold font-mono">IV.</span> <span
                                 data-i18n="section_spells">Zaklęcia i Magia</span>
                         </h2>
-                        <div class="flex gap-4 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2"
+                        <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-2"
                             id="spellcasting-stats-header">
-                            <div>
+                            <div class="flex items-center gap-1">
                                 <span class="text-gray-400" data-i18n="lbl_spell_ability">Zdolność czarowania:</span>
-                                <span class="text-amber-400 font-mono font-bold ml-1"
+                                <span class="text-amber-400 font-mono font-bold"
                                     id="spell-ability-preview">—</span>
                             </div>
-                            <div class="border-l border-gray-800 pl-4">
+                            <div class="flex items-center gap-1 sm:border-l sm:border-gray-800 sm:pl-4">
                                 <span class="text-gray-400" data-i18n="lbl_spell_dc">ST Rzutu Obronnego:</span>
-                                <span class="text-amber-400 font-mono font-bold ml-1" id="spell-dc-preview">—</span>
+                                <span class="text-amber-400 font-mono font-bold" id="spell-dc-preview">—</span>
                             </div>
-                            <div class="border-l border-gray-800 pl-4">
+                            <div class="flex items-center gap-1 sm:border-l sm:border-gray-800 sm:pl-4">
                                 <span class="text-gray-400" data-i18n="lbl_spell_attack">Atak zaklęciem:</span>
-                                <span class="text-amber-400 font-mono font-bold ml-1" id="spell-attack-preview">—</span>
+                                <span class="text-amber-400 font-mono font-bold" id="spell-attack-preview">—</span>
                             </div>
                         </div>
                     </div>
@@ -377,7 +382,7 @@
 
                 <!-- SECTION V: STARTING EQUIPMENT -->
                 <div id="equipment-section"
-                    class="hidden mt-6 rpg-panel p-6 rounded-2xl flex flex-col gap-4 lg:col-span-2">
+                    class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-4">
                     <div class="rpg-panel-header pb-3">
                         <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
                             <span class="text-amber-600 font-bold font-mono">V.</span>

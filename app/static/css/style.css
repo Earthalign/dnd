@@ -239,3 +239,52 @@ h1, h2, h3, h4, .font-rpg {
     color: #a5b4fc;
     text-align: center;
 }
+
+/* ============================================
+   Responsive Layout Fixes
+   ============================================ */
+
+/* Small screens (phones) */
+@media (max-width: 639px) {
+    /* Reduce main container padding */
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    /* Scale down header title */
+    h1 {
+        font-size: 1.5rem !important;
+        letter-spacing: 0.05em;
+    }
+
+    /* Stat rows: stack vertically with clear separations */
+    .stat-row {
+        text-align: center;
+    }
+
+    /* Equipment grid single col on mobile */
+    #equipment-container {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Dice modal: tighter padding on mobile */
+    .dice-modal {
+        padding: 1.25rem 1rem;
+    }
+}
+
+/* Tablet range tweaks */
+@media (min-width: 640px) and (max-width: 1023px) {
+    .container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+/* Large screens: stat row hover glow */
+@media (min-width: 1024px) {
+    .stat-row:hover {
+        background: rgba(212, 175, 55, 0.03);
+    }
+}
