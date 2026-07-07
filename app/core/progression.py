@@ -52,6 +52,15 @@ HALF_CASTER_SLOTS = {
     17: [4,3,3,3,1], 18:[4,3,3,3,1], 19:[4,3,3,3,2], 20:[4,3,3,3,2],
 }
 
+# ─── Artificer Spell Slots (Half Caster rounding up) ───
+ARTIFICER_SLOTS = {
+    1:  [2,0,0,0,0], 2: [2,0,0,0,0], 3: [3,0,0,0,0], 4: [3,0,0,0,0],
+    5:  [4,2,0,0,0], 6: [4,2,0,0,0], 7: [4,3,0,0,0], 8: [4,3,0,0,0],
+    9:  [4,3,2,0,0], 10:[4,3,2,0,0], 11:[4,3,3,0,0], 12:[4,3,3,0,0],
+    13: [4,3,3,1,0], 14:[4,3,3,1,0], 15:[4,3,3,2,0], 16:[4,3,3,2,0],
+    17: [4,3,3,3,1], 18:[4,3,3,3,1], 19:[4,3,3,3,2], 20:[4,3,3,3,2],
+}
+
 # ─── Warlock Pact Magic ───
 # Format: level -> {slots: count, slot_level: level}
 WARLOCK_SLOTS = {
@@ -79,6 +88,7 @@ WARLOCK_SLOTS = {
 
 # ─── Cantrips Known by Level ───
 CANTRIPS_KNOWN = {
+    "artificer": {1:2, 10:3, 14:4},
     "bard":     {1:2, 4:3, 10:4},
     "cleric":   {1:3, 4:4, 10:5},
     "druid":    {1:2, 4:3, 10:4},
@@ -107,13 +117,59 @@ HALF_CASTER_MAX_SPELL_LEVEL = {
 
 # ─── Subclass Selection Level per Class ───
 SUBCLASS_LEVEL = {
-    "barbarian": 3, "bard": 3, "cleric": 1, "druid": 2,
+    "artificer": 3, "barbarian": 3, "bard": 3, "cleric": 1, "druid": 2,
     "fighter": 3, "monk": 3, "paladin": 3, "ranger": 3,
     "rogue": 3, "sorcerer": 1, "warlock": 1, "wizard": 2,
 }
 
 # ─── Subclass Definitions ───
 SUBCLASSES = {
+    "artificer": {
+        "alchemist": {
+            "name": "Alchemik", "name_en": "Alchemist",
+            "description": "Tworzysz potężne eliksiry ratujące życie lub niszczące przeciwników.",
+            "description_en": "You create powerful elixirs to heal or harm.",
+            "features": {
+                3: ["Biegłość: Narzędzia alchemiczne.", "Eksperymentalny Eliksir: Tworzysz darmowy eliksir o losowym działaniu przy każdym długim odpoczynku."],
+                5: ["Uczony Alchemik: Dodajesz modyfikator Int do leczenia i niektórych zaklęć zadających obrażenia."],
+                9: ["Odżywcze Reagenty: Twój Eksperymentalny Eliksir daje też dodatkowe HP i masz możliwość darmowego rzucania Pomniejszego Przywrócenia."],
+                15: ["Chemiczne Mistrzostwo: Odporność na kwas i trucizny, darmowe rzucanie Wyższego Przywrócenia i Uzdrowienia."]
+            }
+        },
+        "artillerist": {
+            "name": "Artylerzysta", "name_en": "Artillerist",
+            "description": "Używasz magii do rzucania morderczych energii i tworzenia magicznych wieżyczek strzelniczych.",
+            "description_en": "You use magic to hurl energy and create magical turrets.",
+            "features": {
+                3: ["Biegłość: Narzędzia rzeźbiarza w drewnie.", "Eldryczne Działo: Tworzysz magiczne działo, które może być miotaczem ognia, balistą lub obrońcą."],
+                5: ["Miotacz Magii (Arcane Firearm): Twoja różdżka lub kij staje się bronią, zwiększając obrażenia zaklęć o 1k8."],
+                9: ["Wybuchowe Działo: Twoje Działo zadaje o 1k8 obrażeń więcej i możesz je zdetonować akcją."],
+                15: ["Podwójne Pozycje: Możesz mieć dwa Eldryczne Działa aktywne naraz!"]
+            }
+        },
+        "battlesmith": {
+            "name": "Kowal Bitewny", "name_en": "Battle Smith",
+            "description": "Jesteś chroniony przez swojego mechanicznego golema, Stalowego Obrońcę.",
+            "description_en": "You are protected by your mechanical golem, the Steel Defender.",
+            "features": {
+                3: ["Biegłość: Broń bojowa i Narzędzia kowalskie.", "Stalowy Obrońca: Masz mechanicznego sługę do pomocy w walce.", "Gotowość Bojowa: Używasz Inteligencji zamiast Siły/Zręczności do rzutów na atak i obrażenia bronią magiczną."],
+                5: ["Dodatkowy Atak."],
+                9: ["Odrzut Arcane Jolt: Zadajesz dodatkowe obrażenia mocą lub leczysz przy trafieniu (2k6)."],
+                15: ["Ulepszony Obrońca: Stalowy obrońca ma wyższe AC, a twój Arcane Jolt zadaje 4k6."]
+            }
+        },
+        "armorer": {
+            "name": "Zbrojmistrz", "name_en": "Armorer",
+            "description": "Twoja zbroja staje się potężnym egzoszkieletem wspierającym Twoje ataki.",
+            "description_en": "Your armor becomes a powerful exoskeleton.",
+            "features": {
+                3: ["Biegłość: Narzędzia kowalskie, Ciężki pancerz.", "Magiczna Zbroja: Model Strażnika (walka wręcz, taunt) lub Model Infiltratora (stealth, zasięg). Zbroja nie wymaga siły."],
+                5: ["Dodatkowy Atak."],
+                9: ["Modyfikacje Zbroi: Twoja zbroja liczy się jako wiele przedmiotów przy nasycaniu magicznym (Infuse Item)."],
+                15: ["Perfekcyjna Zbroja: Strażnik zyskuje przyciąganie wrógów, Infiltrator dostaje ogromną przewagę w ataku."]
+            }
+        },
+    },
     "barbarian": {
         "berserker": {
             "name": "Ścieżka Berserkera", "name_en": "Path of the Berserker",
@@ -590,6 +646,7 @@ SUBCLASSES = {
 
 # ─── ASI Levels per Class ───
 ASI_LEVELS = {
+    "artificer": [4, 8, 12, 16, 19],
     "barbarian": [4, 8, 12, 16, 19],
     "bard":      [4, 8, 12, 16, 19],
     "cleric":    [4, 8, 12, 16, 19],
@@ -606,6 +663,18 @@ ASI_LEVELS = {
 
 # ─── Class Features by Level (key features only) ───
 CLASS_FEATURES = {
+    "artificer": {
+        1: ["Magiczne Majsterkowanie", "Rzucanie Zaklęć"],
+        2: ["Nasycanie Przedmiotów (Infuse Item) - 2 aktywne"],
+        3: ["Specjalizacja Wynalazcy (subklasa)", "Właściwe Narzędzie (The Right Tool for the Job)"],
+        6: ["Biegłość w Narzędziach (Expertise)", "Nasycanie Przedmiotów - 3 aktywne"],
+        7: ["Błysk Geniuszu (Flash of Genius)"],
+        10: ["Adept Magicznych Przedmiotów (Tuning 4 przedmiotów)"],
+        11: ["Zapisywanie Przedmiotów (Spell-Storing Item)"],
+        14: ["Mistrz Magicznych Przedmiotów (Tuning 5 przedmiotów)"],
+        18: ["Znawca Magicznych Przedmiotów (Tuning 6 przedmiotów)"],
+        20: ["Dusza Sztuki (Soul of Artifice) - +1 do rzutów obronnych za każdy nasycony przedmiot"],
+    },
     "barbarian": {
         1: ["Szał (2/długi odp.)", "Obrona bez pancerza"],
         2: ["Brawurowy Atak", "Zmysł Zagrożenia"],
@@ -769,6 +838,7 @@ MONK_MARTIAL_ARTS = {1:"1d4",2:"1d4",3:"1d4",4:"1d4",5:"1d6",6:"1d6",7:"1d6",8:"
 
 # ─── Spell slot type per class ───
 CASTER_TYPE = {
+    "artificer": "artificer",
     "bard": "full", "cleric": "full", "druid": "full",
     "sorcerer": "full", "wizard": "full",
     "paladin": "half", "ranger": "half",

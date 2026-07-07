@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import random
 
-from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, FEATS
+from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, FEATS, WILD_SHAPE_FORMS
 from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS
 from app.core import progression
 from app.schemas.character import CharacterCreateSchema
@@ -39,6 +39,7 @@ async def index(request: Request):
             "class_equipment": CLASS_EQUIPMENT,
             "weapons": WEAPONS,
             "armors": ARMORS,
+            "wild_shape_forms": WILD_SHAPE_FORMS,
             "progression": {
                 "PROFICIENCY_BY_LEVEL": progression.PROFICIENCY_BY_LEVEL,
                 "SUBCLASS_LEVEL": progression.SUBCLASS_LEVEL,

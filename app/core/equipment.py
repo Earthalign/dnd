@@ -59,6 +59,26 @@ ARMORS = {
 
 # Starting equipment packages per class
 CLASS_EQUIPMENT = {
+    "artificer": {
+        "options": [
+            {
+                "id": "artificer_a",
+                "label": "Pakiet A: Łuskowa (Scale Mail) + 2x Prosta Broń (Sztylety) + Kusza + Narzędzia",
+                "weapons": ["dagger", "dagger", "light_crossbow"],
+                "armor": "scale_mail",
+                "shield": False,
+                "notes": "Wynalazca noszący średni pancerz. Posiada narzędzia złodziejskie i rzemieślnicze.",
+            },
+            {
+                "id": "artificer_b",
+                "label": "Pakiet B: Ćwiekowana skóra + Prosta Broń + Kusza + Narzędzia",
+                "weapons": ["mace", "light_crossbow"],
+                "armor": "studded_leather",
+                "shield": False,
+                "notes": "Lżejszy zestaw dla większej mobilności (stealth).",
+            },
+        ]
+    },
     "barbarian": {
         "options": [
             {
@@ -207,11 +227,11 @@ CLASS_EQUIPMENT = {
         "options": [
             {
                 "id": "paladin_a",
-                "label": "Pakiet A: Płytowa + Długi miecz + Tarcza + 5x Oszczepy + Święty symbol",
+                "label": "Pakiet A: Kolcza + Długi miecz + Tarcza + 5x Oszczepy + Święty symbol",
                 "weapons": ["longsword", "javelin"],
                 "armor": "chain_mail",
                 "shield": True,
-                "notes": "Płytowa wymaga STR 15. Zamiast płytowej – kolcza (STR 13). KP 16-20.",
+                "notes": "Kolcza wymaga STR 13. Zapewnia wysoką obronę (KP 16 + 2 z tarczy).",
             },
             {
                 "id": "paladin_b",

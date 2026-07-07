@@ -113,6 +113,13 @@ function getSpellLimits(classKey, level = 1, subclassKey = null) {
             if (level >= l) slots = PROGRESSION.HALF_CASTER_SLOTS[l];
         }
         limits.max_spell_level = slots.reduce((max, count, idx) => count > 0 ? idx + 1 : max, 0);
+    } else if (actualCasterType === 'artificer') {
+        let maxLvlKeys = Object.keys(PROGRESSION.ARTIFICER_SLOTS).map(Number).sort((a,b)=>a-b);
+        let slots = [];
+        for (let l of maxLvlKeys) {
+            if (level >= l) slots = PROGRESSION.ARTIFICER_SLOTS[l];
+        }
+        limits.max_spell_level = slots.reduce((max, count, idx) => count > 0 ? idx + 1 : max, 0);
     } else if (actualCasterType === 'third') {
         let maxLvlKeys = Object.keys(PROGRESSION.THIRD_CASTER_SLOTS).map(Number).sort((a,b)=>a-b);
         let slots = [];
@@ -133,12 +140,12 @@ function getSpellLimits(classKey, level = 1, subclassKey = null) {
     }
 
     // Spells Known vs Prepared
-    if (['cleric', 'druid', 'paladin', 'wizard'].includes(classKey)) {
+    if (['cleric', 'druid', 'paladin', 'wizard', 'artificer'].includes(classKey)) {
         limits.prepared = true;
         const ability = CLASSES[classKey].spellcasting_stat;
         const finalScore = state.baseStats[ability] + getRacialBonus(ability, document.getElementById('race').value);
         const mod = getModifier(finalScore);
-        if (classKey === 'paladin') {
+        if (classKey === 'paladin' || classKey === 'artificer') {
             limits.spells_known = Math.max(1, mod + Math.floor(level / 2));
         } else {
             limits.spells_known = Math.max(1, mod + level);
@@ -775,6 +782,9 @@ function updateUI() {
         }
     }
     
+    // 5.5 Update Wild Shape Section
+    renderWildShapeSection();
+    
     // 6. Validation Check
     let formIsValid = true;
     let errorMessages = [];
@@ -953,11 +963,11 @@ function updateDetailsInfo(raceKey, classKey, bgKey, level = 1, subclassKey = nu
         if (charClass.spellcasting) {
             const limits = getSpellLimits(classKey, level, subclassKey);
             const statLabel = (charClass.spellcasting_stat || '').toUpperCase();
-            const isPrepared = ['cleric','druid','paladin','wizard'].includes(classKey);
+            const isPrepared = ['cleric','druid','paladin','wizard','artificer'].includes(classKey);
             const spellSystem = isPrepared ? (useEn ? 'Prepared' : 'Przygotowane') : (useEn ? 'Known' : 'Znane');
             let spellFormula = '';
             if (isPrepared) {
-                if (classKey === 'paladin') {
+                if (classKey === 'paladin' || classKey === 'artificer') {
                     spellFormula = useEn ? `${statLabel} mod + ½ level (min 1)` : `mod ${statLabel} + ½ poziom (min 1)`;
                 } else {
                     spellFormula = useEn ? `${statLabel} mod + level (min 1)` : `mod ${statLabel} + poziom (min 1)`;
@@ -974,6 +984,9 @@ function updateDetailsInfo(raceKey, classKey, bgKey, level = 1, subclassKey = nu
             } else if (casterType === 'half') {
                 const keys = Object.keys(PROGRESSION.HALF_CASTER_SLOTS).map(Number).sort((a,b)=>a-b);
                 for (let l of keys) { if (level >= l) slotsData = PROGRESSION.HALF_CASTER_SLOTS[l]; }
+            } else if (casterType === 'artificer') {
+                const keys = Object.keys(PROGRESSION.ARTIFICER_SLOTS).map(Number).sort((a,b)=>a-b);
+                for (let l of keys) { if (level >= l) slotsData = PROGRESSION.ARTIFICER_SLOTS[l]; }
             } else if (casterType === 'pact') {
                 const keys = Object.keys(PROGRESSION.WARLOCK_SLOTS).map(Number).sort((a,b)=>a-b);
                 let wd = null;
@@ -1178,6 +1191,66 @@ function renderEquipmentSection() {
                     <p class="text-[10px] text-gray-400 mt-0.5 leading-relaxed italic">${opt.notes || ''}</p>
                 </div>
             </label>
+        `;
+    });
+}
+
+// Wild Shape section rendering
+function renderWildShapeSection() {
+    const classKey = document.getElementById('char_class').value;
+    const subclassKey = document.getElementById('subclass').value;
+    const level = parseInt(document.getElementById('level').value) || 1;
+    const wsSection = document.getElementById('wild-shape-section');
+    const wsContainer = document.getElementById('wild-shape-container');
+    
+    if (classKey !== 'druid' || level < 2) {
+        if (wsSection) wsSection.classList.add('hidden');
+        return;
+    }
+    
+    if (wsSection) wsSection.classList.remove('hidden');
+    if (wsContainer) wsContainer.innerHTML = '';
+    
+    let maxCR = 0;
+    if (subclassKey === 'moon') {
+        maxCR = (level >= 6) ? Math.floor(level / 3) : 1;
+    } else {
+        if (level >= 8) maxCR = 1;
+        else if (level >= 4) maxCR = 0.5;
+        else maxCR = 0.25;
+    }
+    
+    const FORMS = window.WILD_SHAPE_FORMS;
+    if (!FORMS) return;
+    
+    let allowedForms = [];
+    Object.keys(FORMS).forEach(crKey => {
+        const cr = parseFloat(crKey);
+        if (cr <= maxCR) {
+            allowedForms = allowedForms.concat(FORMS[crKey]);
+        }
+    });
+    
+    allowedForms.forEach(form => {
+        const speed = form.speed;
+        let speedWarning = '';
+        if (level < 4 && speed.includes('pływanie')) speedWarning = ' <span class="text-rose-400">(Wymaga 4 poz.)</span>';
+        if (level < 8 && speed.includes('lot')) speedWarning = ' <span class="text-rose-400">(Wymaga 8 poz.)</span>';
+        
+        wsContainer.innerHTML += `
+            <div class="p-3 bg-emerald-950/20 border border-emerald-700/40 rounded-xl shadow-[0_2px_10px_rgba(16,185,129,0.05)]">
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="font-bold text-emerald-400 text-sm">${form.name} <span class="text-[9px] text-gray-500 uppercase tracking-wider ml-1">(${form.name_en})</span></span>
+                    <span class="text-[9px] bg-emerald-950 border border-emerald-700 px-1.5 py-0.5 rounded text-emerald-300 font-mono font-bold">CR ${form.cr}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                    <span class="text-[9px] font-bold bg-rose-950/50 border border-rose-700/40 text-rose-300 px-2 py-0.5 rounded font-mono">❤ ${form.hp} PW</span>
+                    <span class="text-[9px] font-bold bg-blue-950/50 border border-blue-700/40 text-blue-300 px-2 py-0.5 rounded font-mono">🛡 KP ${form.ac}</span>
+                    <span class="text-[9px] font-bold bg-amber-950/50 border border-amber-700/40 text-amber-300 px-2 py-0.5 rounded font-mono">🏃 ${form.speed}${speedWarning}</span>
+                </div>
+                <div class="text-[10px] text-gray-300 mt-1 leading-relaxed"><strong class="text-gray-500 uppercase tracking-wider text-[9px] mr-1">Ataki:</strong> ${form.attacks}</div>
+                ${form.features ? `<div class="text-[10px] text-gray-400 italic mt-1 border-t border-emerald-900/30 pt-1">${form.features}</div>` : ''}
+            </div>
         `;
     });
 }

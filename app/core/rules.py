@@ -38,7 +38,7 @@ RACES = {
             "Mroczne widzenie (18m)",
             "Rodowód fey: Przewaga vs zauroczeniom, odporność na magiczny sen",
             "Trans (4 godziny odpoczynku)",
-            "Biegłość w broni palnej (elfy): Długi miecz, krótki miecz, krótki łuk, długi łuk",
+            "Biegłość w broni elfów: Długi miecz, krótki miecz, krótki łuk, długi łuk",
             "Dodatkowa sztuczka (oparta na Inteligencji)",
             "Dodatkowy język"
         ],
@@ -57,7 +57,7 @@ RACES = {
             "Mroczne widzenie (18m)",
             "Rodowód fey: Przewaga vs zauroczeniom, odporność na magiczny sen",
             "Trans (4 godziny odpoczynku)",
-            "Biegłość w broni palnej (elfy): Długi miecz, krótki miecz, krótki łuk, długi łuk",
+            "Biegłość w broni elfów: Długi miecz, krótki miecz, krótki łuk, długi łuk",
             "Zwinność lasu: Możesz się ukryć będąc tylko lekko przysłoniętym przez naturę"
         ],
         "languages": ["Wspólny", "Elficki"],
@@ -66,7 +66,7 @@ RACES = {
         "subraces": {},
     },
     "dwarf_hill": {
-        "name": "Krasnolud Górski",
+        "name": "Krasnolud Wzgórz",
         "name_en": "Hill Dwarf",
         "asi": {"con": 2, "wis": 1},
         "speed": 7.5,
@@ -86,7 +86,7 @@ RACES = {
         "subraces": {},
     },
     "dwarf_mountain": {
-        "name": "Krasnolud Górski (Góry)",
+        "name": "Krasnolud Górski",
         "name_en": "Mountain Dwarf",
         "asi": {"con": 2, "str": 2},
         "speed": 7.5,
@@ -187,6 +187,91 @@ RACES = {
         "description": "Żywiołowe i ciekawskie gnomy, zaprzyjaźnione z naturą.",
         "subraces": {},
     },
+    "aasimar": {
+        "name": "Aasimar",
+        "name_en": "Aasimar",
+        "asi": {"cha": 2, "wis": 1},
+        "speed": 9,
+        "size": "Średni",
+        "traits": [
+            "Mroczne widzenie (18m)",
+            "Niebiańska Oporność: Odporność na obrażenia nekrotyczne i świetliste (radiant)",
+            "Leczące Dłonie: Leczysz cel za liczbę PW równą twojemu poziomowi raz na długi odpoczynek",
+            "Sztuczka: Światło (Light)"
+        ],
+        "languages": ["Wspólny", "Niebiański"],
+        "darkvision": True,
+        "description": "Dotknięci niebiańską mocą, Aasimarowie niosą światło w ciemności.",
+        "subraces": {},
+    },
+    "goliath": {
+        "name": "Goliat",
+        "name_en": "Goliath",
+        "asi": {"str": 2, "con": 1},
+        "speed": 9,
+        "size": "Średni",
+        "traits": [
+            "Naturalny Atleta: Biegłość w Atletyce",
+            "Wytrzymałość Kamienia: Raz na krótki odpoczynek zredukuj otrzymane obrażenia o 1k12 + mod. Kondycji",
+            "Potężna Budowa: Liczysz się jako rozmiar Duży przy udźwigu",
+            "Górskie Dziecko: Odporność na zimno i aklimatyzacja na dużych wysokościach"
+        ],
+        "languages": ["Wspólny", "Giganci"],
+        "darkvision": False,
+        "description": "Potężni potomkowie gigantów górskich, ceniący siłę i niezależność.",
+        "subraces": {},
+    },
+    "tabaxi": {
+        "name": "Tabaxi",
+        "name_en": "Tabaxi",
+        "asi": {"dex": 2, "cha": 1},
+        "speed": 9,
+        "size": "Średni",
+        "traits": [
+            "Mroczne widzenie (18m)",
+            "Kocia Zwinność: Możesz podwoić swoją prędkość do końca tury (odnawia się po bezruchu)",
+            "Pazury: Twoje nieuzbrojone ataki zadają 1k4 + mod. Siły obrażeń tnących",
+            "Talent Kota: Biegłość w Percepcji i Ukrywaniu się",
+            "Szybka Wspinaczka: Prędkość wspinaczki 6m"
+        ],
+        "languages": ["Wspólny", "+ 1 do wyboru"],
+        "darkvision": True,
+        "description": "Kocioludzie kierowani ciekawością i pasją do zbierania niezwykłych opowieści i skarbów.",
+        "subraces": {},
+    },
+    "firbolg": {
+        "name": "Firbolg",
+        "name_en": "Firbolg",
+        "asi": {"wis": 2, "str": 1},
+        "speed": 9,
+        "size": "Średni",
+        "traits": [
+            "Magia Firbolgów: Rzucasz Wykrycie Magii i Przebranie (Disguise Self) raz na krótki odp.",
+            "Ukryty Krok: Reakcją możesz stać się niewidzialny do początku następnej tury po ataku",
+            "Potężna Budowa: Liczysz się jako rozmiar Duży przy udźwigu",
+            "Mowa Zwierząt i Roślin: Potrafisz przekazać prostą myśl roślinom i bestiom"
+        ],
+        "languages": ["Wspólny", "Elficki", "Giganci"],
+        "darkvision": False,
+        "description": "Spokojni, gigantyczni strażnicy prastarych lasów.",
+        "subraces": {},
+    },
+    "kenku": {
+        "name": "Kenku",
+        "name_en": "Kenku",
+        "asi": {"dex": 2, "wis": 1},
+        "speed": 9,
+        "size": "Średni",
+        "traits": [
+            "Ekspercki Fałszerz: Masz przewagę na kopiowanie tekstów i rzemiosła",
+            "Trening Kenku: Dwie biegłości z: Akrobatyka, Oszustwo, Ukrywanie, Zwinne Dłonie",
+            "Naśladownictwo: Perfekcyjnie naśladujesz dźwięki i głosy, które słyszałeś"
+        ],
+        "languages": ["Wspólny", "Auran (czytanie i pisanie)"],
+        "darkvision": False,
+        "description": "Krukoludzie pozbawieni skrzydeł i własnego głosu, skazani na naśladownictwo.",
+        "subraces": {},
+    }
 }
 
 CLASSES = {
@@ -213,6 +298,31 @@ CLASSES = {
         "primary_ability": "STR",
         "secondary_ability": "CON",
     },
+    "artificer": {
+        "name": "Wynalazca",
+        "name_en": "Artificer",
+        "hit_die": 8,
+        "primary_stats": ["int"],
+        "saving_throws": ["con", "int"],
+        "armor_proficiencies": ["lekka", "średnia", "tarcze"],
+        "weapon_proficiencies": ["prosta", "broń palna (opcjonalnie)"],
+        "num_skills": 2,
+        "skill_choices": ["arcana", "historia", "badanie", "medycyna", "przyroda", "postrzeganie", "sleight_of_hand"],
+        "features_1": [
+            "Magiczne Majsterkowanie",
+            "Rzucanie zaklęć (Int)",
+        ],
+        "spellcasting": True,
+        "spellcasting_stat": "int",
+        "description": "Mistrz inwencji, używający magii poprzez przedmioty, które tworzy.",
+        "subclasses": {
+            "alchemist": "Alchemik - ekspert od mikstur i leczenia",
+            "artillerist": "Artylerzysta - mistrz magicznych wieżyczek",
+            "battlesmith": "Kowal Bitewny - wojownik ze stalowym obrońcą",
+            "armorer": "Zbrojmistrz - mistrz modyfikowanych pancerzy",
+        },
+        "primary_ability": "INT",
+    },
     "bard": {
         "name": "Bard",
         "name_en": "Bard",
@@ -220,7 +330,7 @@ CLASSES = {
         "primary_stats": ["cha"],
         "saving_throws": ["dex", "cha"],
         "armor_proficiencies": ["lekka"],
-        "weapon_proficiencies": ["prosta", "rapier", "szpada", "krótki miecz"],
+        "weapon_proficiencies": ["prosta", "ręczna kusza", "długi miecz", "rapier", "krótki miecz"],
         "num_skills": 3,
         "skill_choices": "all",
         "features_1": [
@@ -322,6 +432,11 @@ CLASSES = {
         ],
         "spellcasting": False,
         "description": "Ascetyczny wojownik doskonalący ciało i ducha poprzez medytację.",
+        "subclasses": {
+            "open_hand": "Droga Otwartej Dłoni - mistrz uderzeń bezbronnych",
+            "shadow": "Droga Cienia - ninja i cisi mordercy",
+            "four_elements": "Droga Czterech Żywiołów - władca żywiołów",
+        },
         "primary_ability": "DEX/WIS",
     },
     "paladin": {
@@ -339,8 +454,14 @@ CLASSES = {
             "Nałożenie Rąk: Lecz PW = poziom × 5 na długi odpoczynek",
         ],
         "spellcasting": True,
+        "spellcasting_level": 2,
         "spellcasting_stat": "cha",
         "description": "Święty wojownik złączony przysięgą z boską mocą.",
+        "subclasses": {
+            "devotion": "Przysięga Oddania - klasyczny święty rycerz",
+            "ancients": "Przysięga Starożytnych - zielony rycerz natury",
+            "vengeance": "Przysięga Zemsty - bezwzględny inkwizytor",
+        },
         "primary_ability": "STR/CHA",
     },
     "ranger": {
@@ -358,8 +479,13 @@ CLASSES = {
             "Naturalne Badanie: Wybierz typ terenu, ignorujesz trudny teren",
         ],
         "spellcasting": True,
+        "spellcasting_level": 2,
         "spellcasting_stat": "wis",
         "description": "Strażnik dziczy, łowca i zwiadowca.",
+        "subclasses": {
+            "hunter": "Łowca - skupiony na walce z konkretnymi zagrożeniami",
+            "beast_master": "Władca Bestii - towarzysze zwierzęcy",
+        },
         "primary_ability": "DEX/WIS",
     },
     "rogue": {
@@ -369,7 +495,7 @@ CLASSES = {
         "primary_stats": ["dex"],
         "saving_throws": ["dex", "int"],
         "armor_proficiencies": ["lekka"],
-        "weapon_proficiencies": ["prosta", "ręczna kusza", "długi łuk", "rapier", "szpada", "krótki miecz"],
+        "weapon_proficiencies": ["prosta", "ręczna kusza", "długi miecz", "rapier", "krótki miecz"],
         "num_skills": 4,
         "skill_choices": ["akrobatyka", "atletyka", "oszustwo", "badanie", "wgląd", "zastraszanie", "postrzeganie", "wykonanie", "perswazja", "sleight_of_hand", "ukrycie"],
         "features_1": [
@@ -379,16 +505,21 @@ CLASSES = {
         ],
         "spellcasting": False,
         "description": "Skryty i zwinny mistrz sztuczek, infiltracji i nagłych ataków.",
+        "subclasses": {
+            "thief": "Złodziej - szybkie ręce i perfekcyjna wspinaczka",
+            "assassin": "Zabójca - ekspert od eliminacji celów",
+            "arcane_trickster": "Tajemny Szachraj - magiczny oszust",
+        },
         "primary_ability": "DEX",
     },
     "sorcerer": {
-        "name": "Czarnoksiężnik",
+        "name": "Zaklinacz",
         "name_en": "Sorcerer",
         "hit_die": 6,
         "primary_stats": ["cha"],
         "saving_throws": ["con", "cha"],
         "armor_proficiencies": [],
-        "weapon_proficiencies": ["sztylet", "oszczep", "proca", "kij"],
+        "weapon_proficiencies": ["sztylet", "oszczep", "proca", "kij", "lekka kusza"],
         "num_skills": 2,
         "skill_choices": ["arcana", "oszustwo", "wgląd", "zastraszanie", "perswazja", "religia"],
         "features_1": [
@@ -398,10 +529,14 @@ CLASSES = {
         "spellcasting": True,
         "spellcasting_stat": "cha",
         "description": "Mag czerpiący moc z wrodzonego daru magicznego.",
+        "subclasses": {
+            "draconic": "Rodowód Smoka - smocze moce i łuski",
+            "wild_magic": "Dzika Magia - chaotyczne wybuchy mocy",
+        },
         "primary_ability": "CHA",
     },
     "warlock": {
-        "name": "Mroczny Czarnoksiężnik",
+        "name": "Czarownik",
         "name_en": "Warlock",
         "hit_die": 8,
         "primary_stats": ["cha"],
@@ -411,12 +546,17 @@ CLASSES = {
         "num_skills": 2,
         "skill_choices": ["arcana", "oszustwo", "historia", "zastraszanie", "badanie", "przyroda", "religia"],
         "features_1": [
-            "Pakt Okultystyczny: Wybierz patrona (Archfey, Fiend, Great Old One)",
+            "Pakt Okultystyczny: Wybierz patrona (Arcywróżka, Demon, Wielki Przedwieczny)",
             "Magia Paktu: 1 miejsce zaklęcia, odnawialne po krótkim odpoczynku",
         ],
         "spellcasting": True,
         "spellcasting_stat": "cha",
-        "description": "Czarnoksiężnik, który zawarł pakt z nadnaturalną istotą.",
+        "description": "Czarownik, który zawarł pakt z nadnaturalną istotą.",
+        "subclasses": {
+            "archfey": "Arcywróżka - patron z Feywild",
+            "fiend": "Diabelski Patron - niszczycielska magia piekieł",
+            "great_old_one": "Wielki Przedwieczny - moc umysłowa z kosmosu",
+        },
         "primary_ability": "CHA",
     },
     "wizard": {
@@ -564,7 +704,8 @@ SPELLS = {
             "classes": [
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "chill_touch",
@@ -601,7 +742,8 @@ SPELLS = {
             "classes": [
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "guidance",
@@ -610,7 +752,8 @@ SPELLS = {
             "classes": [
                 "cleric",
                 "druid"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "light",
@@ -621,7 +764,8 @@ SPELLS = {
                 "cleric",
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "mage_hand",
@@ -632,7 +776,8 @@ SPELLS = {
                 "sorcerer",
                 "warlock",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "minor_illusion",
@@ -654,7 +799,8 @@ SPELLS = {
                 "sorcerer",
                 "warlock",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "ray_of_frost",
@@ -663,7 +809,8 @@ SPELLS = {
             "classes": [
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "sacred_flame",
@@ -688,7 +835,8 @@ SPELLS = {
             "classes": [
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "thaumaturgy",
@@ -723,7 +871,8 @@ SPELLS = {
                 "sorcerer",
                 "warlock",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "produce_flame",
@@ -740,7 +889,8 @@ SPELLS = {
             "classes": [
                 "cleric",
                 "druid"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "thorn_whip",
@@ -760,7 +910,8 @@ SPELLS = {
                 "druid",
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "word_of_radiance",
@@ -789,7 +940,8 @@ SPELLS = {
             "classes": [
                 "ranger",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "animal_friendship",
@@ -879,7 +1031,8 @@ SPELLS = {
                 "druid",
                 "paladin",
                 "ranger"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "detect_magic",
@@ -893,7 +1046,8 @@ SPELLS = {
                 "ranger",
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "disguise_self",
@@ -903,7 +1057,8 @@ SPELLS = {
                 "bard",
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "entangle",
@@ -930,7 +1085,8 @@ SPELLS = {
                 "bard",
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "find_familiar",
@@ -990,7 +1146,8 @@ SPELLS = {
             "classes": [
                 "bard",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "inflict_wounds",
@@ -1024,7 +1181,8 @@ SPELLS = {
             "name_en": "Sanctuary",
             "classes": [
                 "cleric"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "shield",
@@ -1116,7 +1274,8 @@ SPELLS = {
                 "ranger",
                 "sorcerer",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "longstrider",
@@ -1127,7 +1286,8 @@ SPELLS = {
                 "druid",
                 "ranger",
                 "wizard"
-            ]
+            ,
+                "artificer"]
         },
         {
             "id": "purify_food_and_drink",
@@ -1137,7 +1297,8 @@ SPELLS = {
                 "cleric",
                 "druid",
                 "paladin"
-            ]
+            ,
+                "artificer"]
         }
     ],
     "level_2": [
@@ -1829,4 +1990,54 @@ FEATS = {
         "name_en": "Spell Sniper",
         "desc": "Zasięg zaklęć ataku x2. Ignorują one pół osłony. 1 dodatkowa sztuczka wymagająca ataku."
     }
+}
+
+WILD_SHAPE_FORMS = {
+    0.0: [
+        {"name": "Kot", "name_en": "Cat", "cr": 0, "hp": 2, "ac": 12, "speed": "12m, wspinaczka 9m", "attacks": "Pazury (+0 do trafienia, 1 obr. tnące)", "features": "Wysokie ukrywanie i zwinność."},
+        {"name": "Borsuk", "name_en": "Badger", "cr": 0, "hp": 3, "ac": 10, "speed": "6m, kopanie 1.5m", "attacks": "Ugryzienie (+2 do trafienia, 1 obr. kłute)", "features": "Węch."},
+        {"name": "Sowa", "name_en": "Owl", "cr": 0, "hp": 1, "ac": 11, "speed": "1.5m, lot 18m", "attacks": "Szpony (+3 trafienie, 1 tnące)", "features": "Lot z zaskoczenia (bez ataków okazyjnych)."}
+    ],
+    0.125: [
+        {"name": "Mastif", "name_en": "Mastiff", "cr": 0.125, "hp": 5, "ac": 12, "speed": "12m", "attacks": "Ugryzienie (+3 do trafienia, 1k6+1 kłute)", "features": "ST 11 Siła przewrócenie (Prone)."},
+        {"name": "Gigantyczny Szczur", "name_en": "Giant Rat", "cr": 0.125, "hp": 7, "ac": 12, "speed": "9m", "attacks": "Ugryzienie (+4 do trafienia, 1k4+2 kłute)", "features": "Taktyka Stada."}
+    ],
+    0.25: [
+        {"name": "Wilk", "name_en": "Wolf", "cr": 0.25, "hp": 11, "ac": 13, "speed": "12m", "attacks": "Ugryzienie (+4 do trafienia, 2k4+2 kłute)", "features": "Taktyka Stada, ST 11 Siła przewrócenie."},
+        {"name": "Gigantyczny Borsuk", "name_en": "Giant Badger", "cr": 0.25, "hp": 13, "ac": 10, "speed": "9m, kopanie 3m", "attacks": "Wielokrotny atak (Ugryzienie + Pazury)", "features": "Mroczne widzenie, wyostrzony węch."},
+        {"name": "Dzik", "name_en": "Boar", "cr": 0.25, "hp": 11, "ac": 11, "speed": "12m", "attacks": "Kły (+3 trafienie, 1k6+1 tnące)", "features": "Szarża (+1k6 obrażeń). Relentless (Zostaje z 1 HP)."},
+        {"name": "Pantera", "name_en": "Panther", "cr": 0.25, "hp": 13, "ac": 12, "speed": "15m, wspinaczka 12m", "attacks": "Ugryzienie (+4), Pazury (+4)", "features": "Skok z zasadzki (Pounce) dający atak bonusowy."}
+    ],
+    0.5: [
+        {"name": "Czarny Niedźwiedź", "name_en": "Black Bear", "cr": 0.5, "hp": 19, "ac": 11, "speed": "12m, wspinaczka 9m", "attacks": "Wielokrotny atak (Ugryzienie + Pazury)", "features": "Węch."},
+        {"name": "Małpa", "name_en": "Ape", "cr": 0.5, "hp": 19, "ac": 12, "speed": "9m, wspinaczka 9m", "attacks": "Wielokrotny atak (2x Pięść +5 trafienie, 1k6+3)", "features": "Zdolność rzucania kamieniami."},
+        {"name": "Koń Bojowy", "name_en": "Warhorse", "cr": 0.5, "hp": 19, "ac": 11, "speed": "18m", "attacks": "Kopyta (+6 trafienie, 2k6+4 obuchowe)", "features": "Tratująca Szarża (Trampling Charge)."}
+    ],
+    1.0: [
+        {"name": "Niedźwiedź Brunatny", "name_en": "Brown Bear", "cr": 1, "hp": 34, "ac": 11, "speed": "12m, wspinaczka 9m", "attacks": "Wielokrotny atak (Ugryzienie + Pazury)", "features": "Dobre zdrowie, mocne obrażenia bazowe."},
+        {"name": "Wilkor", "name_en": "Dire Wolf", "cr": 1, "hp": 37, "ac": 14, "speed": "15m", "attacks": "Ugryzienie (+5 trafienie, 2k6+3 kłute)", "features": "Taktyka Stada, ST 13 Siła przewrócenie."},
+        {"name": "Gigantyczny Pająk", "name_en": "Giant Spider", "cr": 1, "hp": 26, "ac": 14, "speed": "9m, wspinaczka 9m", "attacks": "Ugryzienie (+5 trafienie, 1k8+3 kłute + 2k8 trucizna)", "features": "Wspinaczka pajęcza, Sieć (Web) do pętania wrogów."},
+        {"name": "Lew", "name_en": "Lion", "cr": 1, "hp": 26, "ac": 12, "speed": "15m", "attacks": "Ugryzienie (+5), Pazury (+5)", "features": "Taktyka Stada, Skok z Zasadzki (Pounce)."}
+    ],
+    2.0: [
+        {"name": "Gigantyczny Dusiciel", "name_en": "Giant Constrictor Snake", "cr": 2, "hp": 60, "ac": 12, "speed": "9m, pływanie 9m", "attacks": "Ugryzienie (+6 trafienie), Duszenie (+6 trafienie)", "features": "Duszenie pęta i chwyta cel na ST 16 ucieczki."},
+        {"name": "Niedźwiedź Polarny", "name_en": "Polar Bear", "cr": 2, "hp": 42, "ac": 12, "speed": "12m, pływanie 9m", "attacks": "Wielokrotny atak (Ugryzienie + Pazury)", "features": "Zwiększone statystyki i pływanie."},
+        {"name": "Gigantyczny Dzik", "name_en": "Giant Boar", "cr": 2, "hp": 42, "ac": 12, "speed": "12m", "attacks": "Kły (+5 trafienie, 2k6+3 tnące)", "features": "Szarża (+2k6 obr), Zaciętość (Relentless)."},
+        {"name": "Alozaur", "name_en": "Allosaurus", "cr": 2, "hp": 51, "ac": 13, "speed": "18m", "attacks": "Ugryzienie (+6 trafienie, 2k10+4), Pazury (+6)", "features": "Skok z zasadzki (Pounce) pozwala uderzyć dwa razy."}
+    ],
+    3.0: [
+        {"name": "Ankylozaur", "name_en": "Ankylosaurus", "cr": 3, "hp": 68, "ac": 15, "speed": "9m", "attacks": "Ogon (+7 trafienie, 4k6+4 obuchowe)", "features": "ST 14 Siła przewrócenie."},
+        {"name": "Orka", "name_en": "Killer Whale", "cr": 3, "hp": 90, "ac": 12, "speed": "pływanie 18m", "attacks": "Ugryzienie (+6 trafienie, 5k6+4 kłute)", "features": "Echolokacja, oddychanie wstrzymywane (30 min)."}
+    ],
+    4.0: [
+        {"name": "Słoń", "name_en": "Elephant", "cr": 4, "hp": 76, "ac": 12, "speed": "12m", "attacks": "Cios Kłem (+8, 3k8+6 kłute), Tratowanie (+8, 3k10+6)", "features": "Szarża z Tratowaniem (ST 12 Siła na przewrócenie)."},
+        {"name": "Stegozaur", "name_en": "Stegosaurus", "cr": 4, "hp": 76, "ac": 13, "speed": "12m", "attacks": "Ogon (+7 trafienie, 6k6+5 kłute)", "features": "Wysokie obrażenia w walce wręcz."}
+    ],
+    5.0: [
+        {"name": "Gigantyczny Krokodyl", "name_en": "Giant Crocodile", "cr": 5, "hp": 85, "ac": 14, "speed": "9m, pływanie 15m", "attacks": "Ugryzienie (+8), Ogon (+8)", "features": "Wielokrotny atak. Ugryzienie chwyta i pęta automatycznie."},
+        {"name": "Triceratops", "name_en": "Triceratops", "cr": 5, "hp": 95, "ac": 13, "speed": "15m", "attacks": "Gore (+9 trafienie, 4k8+6 kłute)", "features": "Tratująca Szarża dająca Przewrócenie i bonus Stomp."}
+    ],
+    6.0: [
+        {"name": "Mamut", "name_en": "Mammoth", "cr": 6, "hp": 126, "ac": 13, "speed": "12m", "attacks": "Gore (+9 trafienie, 4k8+7 kłute)", "features": "Szarża dająca Przewrócenie + Atak Stomp z bonusem 4k10+7."}
+    ]
 }

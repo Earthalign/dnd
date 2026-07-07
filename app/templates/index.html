@@ -350,7 +350,7 @@
                 </div>
 
                 <!-- SECTION IV: SPELL SELECTION (only for spellcasting classes) -->
-                <div id="spell-section" class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-6">
+                <div id="spell-section" class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-6 lg:col-span-12">
                     <div
                         class="rpg-panel-header pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
@@ -382,7 +382,7 @@
 
                 <!-- SECTION V: STARTING EQUIPMENT -->
                 <div id="equipment-section"
-                    class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-4">
+                    class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-4 lg:col-span-12">
                     <div class="rpg-panel-header pb-3">
                         <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
                             <span class="text-amber-600 font-bold font-mono">V.</span>
@@ -395,9 +395,24 @@
                         <!-- Loaded by JS -->
                     </div>
                 </div>
+                
+                <!-- SECTION VI: DRUID WILD SHAPE -->
+                <div id="wild-shape-section"
+                    class="hidden mt-6 rpg-panel p-5 lg:p-6 rounded-2xl flex flex-col gap-4 lg:col-span-12">
+                    <div class="rpg-panel-header pb-3">
+                        <h2 class="text-2xl font-bold text-amber-400 font-serif flex items-center gap-2">
+                            <span class="text-amber-600 font-bold font-mono">VI.</span>
+                            <span>🐻 Formy Zwierzęce (Dzika Kształtność)</span>
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-1">Jako Druid możesz przybrać formę poniższych zwierząt w zależności od Twojego poziomu i subklasy.</p>
+                    </div>
+                    <div id="wild-shape-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Loaded by JS -->
+                    </div>
+                </div>
 
                 <!-- Validation and Generate Section -->
-                <div class="mt-4 pt-6 border-t border-gray-800 space-y-4">
+                <div class="mt-4 pt-6 border-t border-gray-800 space-y-4 lg:col-span-12">
                     <div id="validation-summary">
                         <!-- Validation errors or success message populated in JS -->
                     </div>
@@ -488,6 +503,7 @@
         window.CLASS_EQUIPMENT = {{ class_equipment | tojson }};
         window.WEAPONS = {{ weapons | tojson }};
         window.ARMORS = {{ armors | tojson }};
+        window.WILD_SHAPE_FORMS = {{ wild_shape_forms | tojson }};
     </script>
     <script src="/static/js/creator.js"></script>
 </body>
