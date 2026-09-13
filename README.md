@@ -139,21 +139,6 @@ docker build -t dnd-creator .
 docker run -p 10000:10000 dnd-creator
 ```
 
----
-
-## 🌍 Deploying to Render.com
-
-This project is pre-configured for Render.com via `render.yaml`.
-
-1. Push the repository to GitHub
-2. Connect your repo in the Render.com dashboard
-3. Render will automatically detect `render.yaml` and build/deploy the Docker container
-4. The app will be available at your Render subdomain
-
-> **Note:** The `karta-postaci-interaktywna.pdf` template must be present in `app/data/` for PDF generation to work.
-
----
-
 ## 🔌 API Endpoints
 
 | Method | Path | Description |
@@ -187,6 +172,6 @@ pymupdf>=1.24.0
 
 ## 📜 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is only for private use.
 
 D&D 5e rules and terminology are property of Wizards of the Coast. This is a fan-made tool for personal and educational use.
