@@ -10,7 +10,7 @@ from app.core.rules import (
     POINT_BUY_COSTS, POINT_BUY_TOTAL, POINT_BUY_MIN, POINT_BUY_MAX,
     STANDARD_ARRAY, CLASS_STAT_PRIORITY, PROFICIENCY_BY_LEVEL
 )
-from app.core.progression import CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS, THIRD_CASTER_SLOTS, WARLOCK_SLOTS, SUBCLASSES, CLASS_FEATURES
+from app.core.progression import CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS, THIRD_CASTER_SLOTS, WARLOCK_SLOTS, SUBCLASSES, CLASS_FEATURES, SUBCLASS_LEVEL, ARTIFICER_SLOTS
 from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS
 from app.schemas.character import CharacterCreateSchema
 
@@ -62,6 +62,8 @@ def get_racial_asi(race_key: str, custom_asi_json: str = "") -> Dict[str, int]:
     """Return default or validated custom racial ability score improvements."""
     race = RACES.get(race_key, {})
     if not custom_asi_json:
+        if race_key == "human_variant":
+            raise ValueError("Wybierz dwie różne cechy dla Człowieka Wariantu.")
         return dict(race.get("asi", {}))
 
     try:
@@ -76,6 +78,11 @@ def get_racial_asi(race_key: str, custom_asi_json: str = "") -> Dict[str, int]:
         stats = custom_asi.get("stats", [])
         if len(stats) != 3 or len(set(stats)) != 3 or not set(stats).issubset(stat_keys):
             raise ValueError("Wybierz trzy różne cechy dla bonusu +1.")
+        asi = {stat: 1 for stat in stats}
+    elif mode == "variant_plus_one":
+        stats = custom_asi.get("stats", [])
+        if len(stats) != 2 or len(set(stats)) != 2 or not set(stats).issubset(stat_keys):
+            raise ValueError("Człowiek Wariant wymaga dwóch różnych cech z premią +1.")
         asi = {stat: 1 for stat in stats}
     elif mode == "two_plus_one":
         plus_two = custom_asi.get("plus_two")
@@ -186,6 +193,18 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     alignment = data.alignment
     subclass_key = data.subclass
 
+    if not 1 <= level <= 20:
+        raise ValueError("Poziom postaci musi mieścić się w zakresie 1-20.")
+    if char_class not in CLASSES:
+        raise ValueError("Wybrana klasa nie istnieje.")
+    if race not in RACES:
+        raise ValueError("Wybrana rasa nie istnieje.")
+    if subclass_key:
+        if subclass_key not in SUBCLASSES.get(char_class, {}):
+            raise ValueError("Wybrana podklasa nie pasuje do klasy.")
+        if level < SUBCLASS_LEVEL.get(char_class, 3):
+            raise ValueError("Podklasa nie jest jeszcze dostępna na tym poziomie.")
+
     # Base stats (from Point Buy/Standard Array, 8-15)
     base_stats = {
         "str": data.strength,
@@ -213,12 +232,21 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         if slot_type == "feat" and slot.get("feat"):
             asi_feats.append(slot["feat"])
         elif slot_type == "+2" and slot.get("stat1"):
-            raw_stats[slot["stat1"]] = raw_stats.get(slot["stat1"], 10) + 2
+            stat = slot["stat1"]
+            if stat not in raw_stats or raw_stats[stat] + 2 > 20:
+                raise ValueError("Poprawa cechy nie może podnieść statystyki powyżej 20.")
+            raw_stats[stat] += 2
         elif slot_type == "+1+1":
-            if slot.get("stat1"):
-                raw_stats[slot["stat1"]] = raw_stats.get(slot["stat1"], 10) + 1
-            if slot.get("stat2"):
-                raw_stats[slot["stat2"]] = raw_stats.get(slot["stat2"], 10) + 1
+            stat1 = slot.get("stat1")
+            stat2 = slot.get("stat2")
+            if not stat1 or not stat2 or stat1 == stat2:
+                raise ValueError("Wybierz dwie różne cechy dla poprawy +1/+1.")
+            if stat1 not in raw_stats or stat2 not in raw_stats:
+                raise ValueError("Wybrano nieprawidłową cechę do poprawy.")
+            if raw_stats[stat1] + 1 > 20 or raw_stats[stat2] + 1 > 20:
+                raise ValueError("Poprawa cechy nie może podnieść statystyki powyżej 20.")
+            raw_stats[stat1] += 1
+            raw_stats[stat2] += 1
 
     # Human variant free feat
     if data.human_variant_feat:
@@ -227,6 +255,16 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     class_data = CLASSES.get(char_class, {})
     race_data = RACES.get(race, {})
     bg_data = BACKGROUNDS.get(background, {})
+
+    class_choices = class_data.get("skill_choices", [])
+    allowed_class_skills = set(SKILLS) if class_choices == "all" else set(class_choices)
+    allowed_skills = allowed_class_skills | set(bg_data.get("skills", []))
+    if race == "human_variant":
+        allowed_skills |= set(SKILLS)
+    if any(skill not in SKILLS or skill not in allowed_skills for skill in data.skills):
+        raise ValueError("Wybrano umiejętność niedostępną dla tej klasy, pochodzenia lub rasy.")
+    if any(skill not in data.skills for skill in data.expertise):
+        raise ValueError("Ekspertyza wymaga wcześniejszej biegłości w danej umiejętności.")
 
     prof_bonus = get_proficiency_bonus(level)
 
@@ -307,6 +345,10 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     if subclass_key:
         sc_data = SUBCLASSES.get(char_class, {}).get(subclass_key, {})
         subclass_name = sc_data.get("name", subclass_key)
+        subclass_features = sc_data.get("features", {})
+        for feature_level, feature_list in subclass_features.items():
+            if int(feature_level) <= level:
+                class_features.extend(feature_list)
         
     class_display_name = class_data.get("name", char_class)
     if subclass_name:
@@ -333,6 +375,9 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         slot_level = warlock_data["slot_level"]
         if slot_level > 0:
             spell_slots = {slot_level: slots_count}
+    elif caster_type == "artificer":
+        slots_list = ARTIFICER_SLOTS.get(level, [0] * 5)
+        spell_slots = {i + 1: slots_list[i] for i in range(5) if slots_list[i] > 0}
 
     # Build equipment info string — class package + background items
     equipment_info = ""

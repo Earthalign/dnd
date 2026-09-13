@@ -434,8 +434,10 @@ def generate_character_pdf(char_data: dict) -> bytes:
             header = fitz.Rect(x, y, x + card_width, y + 31)
             page.draw_rect(header, color=(0.10, 0.25, 0.16), fill=(0.14, 0.38, 0.23), width=0)
             title = f"{form.get('name', 'Nieznana forma')}  |  CR {form.get('cr', '-') }"
-            insert_fitted_text(page, fitz.Rect(x + 8, y + 4, x + card_width - 8, y + 18), title, "robobold", (0.95, 0.98, 0.92), [12, 11, 10, 9])
-            insert_fitted_text(page, fitz.Rect(x + 8, y + 19, x + card_width - 8, y + 29), form.get("name_en", ""), "roboreg", (0.75, 0.88, 0.78), [8.5, 7.5, 6.5])
+            page.insert_text((x + 8, y + 14), title, fontsize=10, fontname="robobold", color=(0.95, 0.98, 0.92))
+            name_en = form.get("name_en", "")
+            if name_en:
+                page.insert_text((x + 8, y + 27), name_en, fontsize=7.5, fontname="roboreg", color=(0.75, 0.88, 0.78))
 
             stat_y = y + 37
             challenge_label = form.get("challenge", "CR " + str(form.get("cr", "-")))

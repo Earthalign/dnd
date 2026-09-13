@@ -23,7 +23,7 @@ RACES = {
         "size": "Średni",
         "traits": ["Dodatkowy język", "Wybierz 1 dodatkową biegłość"],
         "asi": {},
-        "description": "Wariant człowieka pozwala wziąć od razu 1 atut oraz dodać 1 punkt do dwóch dowolnych statystyk (punkty ASI).",
+        "description": "Wariant człowieka zwiększa dwie różne cechy o 1, daje jedną biegłość i jeden atut.",
         "subraces": {},
         "darkvision": False,
         "languages": ["Wspólny", "+ 1 do wyboru"],
@@ -263,7 +263,7 @@ RACES = {
         "size": "Średni",
         "traits": [
             "Magia Firbolgów: Rzucasz Wykrycie Magii i Przebranie (Disguise Self) raz na krótki odp.",
-            "Ukryty Krok: Reakcją możesz stać się niewidzialny do początku następnej tury po ataku",
+            "Ukryty Krok: Akcją bonusową stajesz się niewidzialny do początku swojej następnej tury lub do ataku, zadania obrażeń albo wymuszenia rzutu obronnego",
             "Potężna Budowa: Liczysz się jako rozmiar Duży przy udźwigu",
             "Mowa Zwierząt i Roślin: Potrafisz przekazać prostą myśl roślinom i bestiom"
         ],
@@ -302,7 +302,7 @@ CLASSES = {
         "num_skills": 2,
         "skill_choices": ["atletyka", "postrzeganie", "zastraszanie", "przetrwanie", "przyroda", "zwierzęta"],
         "features_1": [
-            "Szał (Rage): Bonus do ataków i obrażeń od siły, odporność na obrażenia fizyczne. Użycia: 2",
+            "Szał (Rage): Bonus do obrażeń od ataków Siłą i odporność na obrażenia obuchowe, kłute i tnące. Użycia: 2",
             "Obrona bez pancerza: KP = 10 + modyfikator Zręczności + modyfikator Kondycji",
         ],
         "spellcasting": False,

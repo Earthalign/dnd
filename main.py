@@ -269,8 +269,10 @@ async def generate_pdf(request: Request):
             for cr, forms in WILD_SHAPE_FORMS.items()
             if cr <= max_cr
             for form in forms
+            if (form_data.level >= 4 or "pływanie" not in form.get("speed", ""))
+            and (form_data.level >= 8 or "lot" not in form.get("speed", ""))
         ]
-        if form_data.level >= 10:
+        if form_data.level >= 10 and form_data.subclass == "moon":
             sheet["wild_shape_forms"].extend(ELEMENTAL_FORMS)
     else:
         sheet["wild_shape_forms"] = []

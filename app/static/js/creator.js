@@ -103,7 +103,7 @@ function getRacialBonus(stat, raceKey) {
 function getRacialBonuses(raceKey) {
     if (state.customRacialAsiEnabled) {
         const custom = state.customRacialAsi;
-        if (custom.mode === 'three_plus_one') {
+        if (custom.mode === 'three_plus_one' || custom.mode === 'variant_plus_one') {
             return Object.fromEntries((custom.stats || []).map(stat => [stat, 1]));
         }
         return {
@@ -148,7 +148,7 @@ function renderCustomRacialAsi() {
         .map(([key, label]) => `<option value="${key}" ${key === selected ? 'selected' : ''} ${excluded.includes(key) && key !== selected ? 'disabled' : ''}>${label}</option>`)
         .join('');
     let choicesHtml = '';
-    if (custom.mode === 'three_plus_one') {
+    if (custom.mode === 'three_plus_one' || custom.mode === 'variant_plus_one') {
         choicesHtml = (custom.stats || []).map((stat, index) => `
             <label class="flex-1 text-xs text-gray-400">Cecha +1
                 <select onchange="setCustomRacialStat(${index}, this.value)" class="w-full input-rpg rounded-lg px-2 py-2 text-white text-xs mt-1">${options(stat, (custom.stats || []).filter((_, i) => i !== index))}</select>
@@ -172,10 +172,7 @@ function renderCustomRacialAsi() {
                     <p class="text-xs text-gray-400 mt-1">Zastępują premie wybranej rasy. Żadna cecha nie może przekroczyć 20.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <select onchange="setCustomRacialAsiMode(this.value)" class="input-rpg rounded-lg px-2 py-2 text-white text-xs">
-                        <option value="three_plus_one" ${custom.mode === 'three_plus_one' ? 'selected' : ''}>Trzy różne cechy: +1</option>
-                        <option value="two_plus_one" ${custom.mode === 'two_plus_one' ? 'selected' : ''}>Jedna cecha: +2, inna: +1</option>
-                    </select>
+                    ${custom.mode === 'variant_plus_one' ? '<span class="text-xs text-emerald-200 font-semibold">Dwie różne cechy: +1</span>' : `<select onchange="setCustomRacialAsiMode(this.value)" class="input-rpg rounded-lg px-2 py-2 text-white text-xs"><option value="three_plus_one" ${custom.mode === 'three_plus_one' ? 'selected' : ''}>Trzy różne cechy: +1</option><option value="two_plus_one" ${custom.mode === 'two_plus_one' ? 'selected' : ''}>Jedna cecha: +2, inna: +1</option></select>`}
                     <button type="button" onclick="setCustomRacialAsiEnabled(false)" class="text-xs text-gray-400 hover:text-white px-2 py-2">Użyj premii rasy</button>
                 </div>
             </div>
@@ -193,6 +190,8 @@ function setCustomRacialAsiMode(mode) {
     state.customRacialAsi.mode = mode;
     if (mode === 'three_plus_one') {
         state.customRacialAsi.stats = ['str', 'dex', 'con'];
+    } else if (mode === 'variant_plus_one') {
+        state.customRacialAsi.stats = ['str', 'dex'];
     } else {
         state.customRacialAsi.plus_two = 'str';
         state.customRacialAsi.plus_one = 'dex';
@@ -201,7 +200,7 @@ function setCustomRacialAsiMode(mode) {
 }
 
 function setCustomRacialStat(slot, stat) {
-    if (state.customRacialAsi.mode === 'three_plus_one') {
+    if (state.customRacialAsi.mode === 'three_plus_one' || state.customRacialAsi.mode === 'variant_plus_one') {
         state.customRacialAsi.stats[slot] = stat;
     } else if (slot === 0) {
         state.customRacialAsi.plus_two = stat;
@@ -217,6 +216,29 @@ function calculateRemainingPoints() {
         spent += COSTS[state.baseStats[stat]] || 0;
     }
     return 27 - spent;
+}
+
+function validateLevelUpStats() {
+    const scores = Object.fromEntries(
+        Object.entries(state.baseStats).map(([stat, value]) => [stat, value + getRacialBonus(stat, document.getElementById('race').value)])
+    );
+    const errors = [];
+    state.asiSlots.forEach(slot => {
+        if (slot.type === '+2' && slot.stat1) {
+            if (scores[slot.stat1] + 2 > 20) errors.push('ASI +2 przekracza maksymalną wartość 20.');
+            else scores[slot.stat1] += 2;
+        } else if (slot.type === '+1+1') {
+            if (!slot.stat1 || !slot.stat2 || slot.stat1 === slot.stat2) {
+                errors.push('ASI +1/+1 wymaga dwóch różnych cech.');
+            } else if (scores[slot.stat1] + 1 > 20 || scores[slot.stat2] + 1 > 20) {
+                errors.push('ASI +1 przekracza maksymalną wartość 20.');
+            } else {
+                scores[slot.stat1] += 1;
+                scores[slot.stat2] += 1;
+            }
+        }
+    });
+    return errors;
 }
 
 function getBackgroundSkills(bgKey) {
@@ -374,6 +396,14 @@ function updateUI() {
     const classKey = document.getElementById('char_class').value;
     const bgKey = document.getElementById('background').value;
     const level = parseInt(document.getElementById('level').value) || 1;
+
+    if (raceKey === 'human_variant') {
+        state.customRacialAsiEnabled = true;
+        state.customRacialAsi.mode = 'variant_plus_one';
+        if (!Array.isArray(state.customRacialAsi.stats) || state.customRacialAsi.stats.length !== 2) {
+            state.customRacialAsi.stats = ['str', 'dex'];
+        }
+    }
     
     // Handle Subclass Dropdown
     const subclassContainer = document.getElementById('subclass-container');
@@ -550,7 +580,7 @@ function updateUI() {
     document.getElementById('ac-preview').innerText = acVal;
     
     // 3. Update Skills Section
-    const isHuman = (raceKey === 'human');
+    const isHuman = (raceKey === 'human_variant');
     const numClassSkills = charClass ? charClass.num_skills : 2;
     const classChoices = charClass ? charClass.skill_choices : [];
     
@@ -801,17 +831,19 @@ function updateUI() {
     const limits = getSpellLimits(classKey, level, subclassKey);
     let cantripLimit = limits.cantrips;
     let spellsKnownLimit = limits.spells_known;
+    const thirdCasterSubclass = subclassKey === 'eldritch_knight' || subclassKey === 'arcane_trickster';
+    const spellListClass = thirdCasterSubclass ? 'wizard' : classKey;
     
     let allowedCantripClasses = [];
-    if (charClass && charClass.spellcasting) {
-        allowedCantripClasses.push(classKey);
+    if ((charClass && charClass.spellcasting) || thirdCasterSubclass) {
+        allowedCantripClasses.push(spellListClass);
     }
     if (raceKey === 'elf_high') {
         cantripLimit += 1;
         allowedCantripClasses.push('wizard');
     }
 
-    const isSpellcaster = (charClass && charClass.spellcasting && (limits.cantrips > 0 || limits.max_spell_level > 0)) || (raceKey === 'elf_high');
+    const isSpellcaster = ((charClass && charClass.spellcasting) || thirdCasterSubclass) && (limits.cantrips > 0 || limits.max_spell_level > 0) || (raceKey === 'elf_high');
     
     if (!isSpellcaster) {
         spellSection.classList.add('hidden');
@@ -822,9 +854,9 @@ function updateUI() {
         
         // Render spell stats (only if actual class is spellcaster)
         const statsHeader = document.getElementById('spellcasting-stats-header');
-        if (charClass && charClass.spellcasting) {
+        if ((charClass && charClass.spellcasting) || thirdCasterSubclass) {
             statsHeader.classList.remove('invisible');
-            const spellcastingStat = charClass.spellcasting_stat;
+            const spellcastingStat = thirdCasterSubclass ? 'int' : charClass.spellcasting_stat;
             const finalStatScore = state.baseStats[spellcastingStat] + getRacialBonus(spellcastingStat, raceKey);
             const spellcastingMod = getModifier(finalStatScore);
             const profBonus = 2; // Level 1
@@ -899,7 +931,7 @@ function updateUI() {
         }
 
         for (let l = 1; l <= limits.max_spell_level; l++) {
-            const allowedSpells = (SPELLS_DATA[`level_${l}`] || []).filter(s => s.classes.includes(classKey));
+            const allowedSpells = (SPELLS_DATA[`level_${l}`] || []).filter(s => s.classes.includes(spellListClass));
             
             // Clean outdated
             state[`selectedSpells${l}`].forEach(spellId => {
@@ -963,7 +995,7 @@ function updateUI() {
 
     if (state.customRacialAsiEnabled) {
         const custom = state.customRacialAsi;
-        const selectedStats = custom.mode === 'three_plus_one'
+        const selectedStats = custom.mode === 'three_plus_one' || custom.mode === 'variant_plus_one'
             ? custom.stats
             : [custom.plus_two, custom.plus_one];
         const expectedCount = custom.mode === 'three_plus_one' ? 3 : 2;
@@ -991,6 +1023,13 @@ function updateUI() {
     if (classKey === 'rogue' && state.expertiseSelected.size < 2) {
         formIsValid = false;
         errorMessages.push(t('err_expertise') || "Jako łotrzyk musisz wybrać dokładnie 2 umiejętności do ekspertyzy.");
+    }
+
+    if (numAsis > 0) {
+        validateLevelUpStats().forEach(message => {
+            formIsValid = false;
+            errorMessages.push(message);
+        });
     }
 
     if (isSpellcaster) {
@@ -1415,11 +1454,11 @@ function renderWildShapeSection() {
         }
     });
 
-    if (level >= 10 && Array.isArray(window.ELEMENTAL_FORMS)) {
+    if (level >= 10 && subclassKey === 'moon' && Array.isArray(window.ELEMENTAL_FORMS)) {
         allowedForms = allowedForms.concat(window.ELEMENTAL_FORMS);
     }
 
-    if (level >= 10) {
+    if (level >= 10 && subclassKey === 'moon') {
         wsContainer.innerHTML += `
             <div class="md:col-span-2 p-3 bg-cyan-950/20 border border-cyan-700/40 rounded-xl text-xs text-cyan-200">
                 <strong>Żywiołaki od 10. poziomu:</strong> możesz wydać dwa użycia Dzikej Kształtności, aby przybrać formę żywiołaka.
@@ -1430,8 +1469,8 @@ function renderWildShapeSection() {
     allowedForms.forEach(form => {
         const speed = form.speed;
         let speedWarning = '';
-        if (level < 4 && speed.includes('pływanie')) speedWarning = ' <span class="text-rose-400">(Wymaga 4 poz.)</span>';
-        if (level < 8 && speed.includes('lot')) speedWarning = ' <span class="text-rose-400">(Wymaga 8 poz.)</span>';
+        if (level < 4 && speed.includes('pływanie')) return;
+        if (level < 8 && speed.includes('lot')) return;
         
         wsContainer.innerHTML += `
             <div class="p-3 bg-emerald-950/20 border border-emerald-700/40 rounded-xl shadow-[0_2px_10px_rgba(16,185,129,0.05)]">

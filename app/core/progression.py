@@ -250,7 +250,7 @@ SUBCLASSES = {
                 2: ["Użycie Boskości: Blask Świtu. Tworzysz wokół wybuch magicznego światła."],
                 6: ["Wspólny Rozbłysk: Możesz chronić też sojusznika oddalonego do 9m."],
                 8: ["Potężne Rzucanie Zaklęć: Dodaj mod Wis do sztuczek."],
-                17: ["Korona Światła: Uwalniasz aurę światła (18m). Przeciwnicy mają niekorzyść na rzuty na ogień/światłość."]
+                17: ["Korona Światła: Akcją tworzysz aurę jasnego światła 18 m na 1 minutę. Wrogowie w aurze mają niekorzyść na rzuty obronne przeciw twoim zaklęciom ognia i światłości."]
             }
         },
         "nature": {
