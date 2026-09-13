@@ -1,99 +1,153 @@
 /* ==========================================================================
-   Spellbook Page Controller
+   Spellbook Page Controller (Polish Edition)
+   Loads spells locally from /api/spells with filtering & instant search
    ========================================================================== */
 
-let classSpellsList = [];
+let debounceTimer = null;
 
-async function loadSpells() {
-    const cls = document.getElementById('class-select').value;
-    if (!cls) return;
+const CLASS_PL_NAMES = {
+    bard: 'Bard',
+    cleric: 'Kleryk',
+    druid: 'Druid',
+    paladin: 'Paladyn',
+    ranger: 'Łowca',
+    sorcerer: 'Zaklinacz',
+    warlock: 'Czarnoksiężnik',
+    wizard: 'Czarodziej / Mag',
+    artificer: 'Artificer'
+};
+
+async function fetchSpells() {
+    const classVal = document.getElementById('class-select').value;
+    const levelVal = document.getElementById('level-select').value;
+    const searchVal = document.getElementById('search-input').value.trim();
 
     const container = document.getElementById('spell-container');
     const loading = document.getElementById('loading');
-    
-    container.innerHTML = '';
+    const countEl = document.getElementById('spell-count');
+
     loading.classList.remove('hidden');
 
     try {
-        // Get spells list for class (contains name, level, url)
-        const res = await fetch(`https://www.dnd5eapi.co/api/classes/${cls}/spells`);
-        const data = await res.json();
-        
-        classSpellsList = data.results; 
-        
-        // Set default level to cantrip if available to prevent loading 300 spells at once
-        document.getElementById('level-select').value = "0";
-        
-        await filterSpells();
+        const params = new URLSearchParams();
+        if (classVal && classVal !== 'all') params.append('class_name', classVal);
+        if (levelVal && levelVal !== 'all') params.append('level', levelVal);
+        if (searchVal) params.append('search', searchVal);
+
+        const url = `/api/spells?${params.toString()}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Błąd pobierania zaklęć z serwera');
+
+        const spells = await res.json();
+        renderSpellCards(spells, container);
+        if (countEl) countEl.innerText = spells.length;
     } catch (e) {
-        console.error(e);
-        container.innerHTML = '<p class="text-rose-500">Błąd podczas pobierania zaklęć.</p>';
+        console.error('Błąd podczas ładowania zaklęć:', e);
+        container.innerHTML = `
+            <div class="col-span-full bg-rose-950/40 border border-rose-500/40 rounded-xl p-6 text-center text-rose-300">
+                <p class="font-bold text-lg mb-1">Wystąpił błąd podczas ładowania zaklęć</p>
+                <p class="text-sm text-gray-400">${e.message || 'Spróbuj odświeżyć stronę lub zmienić filtry.'}</p>
+            </div>
+        `;
+        if (countEl) countEl.innerText = '0';
     } finally {
         loading.classList.add('hidden');
     }
 }
 
-async function filterSpells() {
-    const level = document.getElementById('level-select').value;
-    const container = document.getElementById('spell-container');
-    const loading = document.getElementById('loading');
-    
+function renderSpellCards(spells, container) {
     container.innerHTML = '';
-    loading.classList.remove('hidden');
-    
-    try {
-        // Filter the base list by level
-        let filteredList = classSpellsList;
-        if (level !== 'all') {
-            filteredList = classSpellsList.filter(s => s.level.toString() === level);
-        }
-        
-        // Limit to 50 spells max at a time to prevent browser/API crash
-        if (filteredList.length > 50) {
-            const warning = document.createElement('div');
-            warning.className = 'col-span-full text-amber-500 text-sm mb-4 bg-amber-950/30 p-3 rounded-lg border border-amber-500/30';
-            warning.innerText = `Wyświetlanie pierwszych 50 z ${filteredList.length} zaklęć dla lepszej wydajności. Wybierz konkretny poziom, aby zobaczyć wszystkie.`;
-            container.appendChild(warning);
-            filteredList = filteredList.slice(0, 50);
-        }
-        
-        // Fetch details in small chunks to avoid rate limits (HTTP 429)
-        const chunkSize = 10;
-        const fullSpells = [];
-        
-        for (let i = 0; i < filteredList.length; i += chunkSize) {
-            const chunk = filteredList.slice(i, i + chunkSize);
-            const promises = chunk.map(s => fetch(`https://www.dnd5eapi.co${s.url}`).then(r => r.json()));
-            const results = await Promise.all(promises);
-            fullSpells.push(...results);
+
+    if (!spells || spells.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full bg-gray-900/40 border border-gray-800 rounded-2xl p-12 text-center text-gray-400">
+                <p class="text-3xl mb-3">🔍</p>
+                <p class="text-lg font-serif text-amber-400 mb-1">Brak zaklęć spełniających kryteria</p>
+                <p class="text-xs text-gray-500">Zmień wybraną klasę, krąg lub wyczyść pole wyszukiwania.</p>
+            </div>
+        `;
+        return;
+    }
+
+    spells.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'spell-card';
+
+        // Title and School/Level
+        const levelBadge = s.level === 0 ? 'Sztuczka' : `${s.level}. Krąg`;
+        const schoolText = s.school ? s.school : levelBadge;
+
+        // Polish classes badges
+        const classBadges = (s.classes || []).map(c => {
+            const plName = CLASS_PL_NAMES[c] || c;
+            return `<span class="bg-amber-950/40 border border-amber-600/30 text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-mono">${plName}</span>`;
+        }).join(' ');
+
+        // Format Description paragraphs
+        let formattedDesc = s.desc || '';
+        if (s.desc_html && s.desc_html.includes('<br>')) {
+            formattedDesc = s.desc_html;
+        } else {
+            formattedDesc = formattedDesc.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
         }
 
-        // Render cards
-        fullSpells.forEach(s => {
-            const levelText = s.level === 0 ? 'Cantrip' : `Level ${s.level}`;
-            const desc = s.desc ? s.desc.join('\n') : '';
-            const comps = s.components ? s.components.join(', ') + (s.material ? ` (${s.material})` : '') : '';
+        card.innerHTML = `
+            <div class="flex items-start justify-between gap-2 border-b border-amber-600/20 pb-2 mb-2">
+                <div class="spell-card-title !mb-0 !pb-0 !border-0">${s.name_pl}</div>
+                <span class="bg-amber-500/10 border border-amber-500/30 text-amber-300 px-2 py-0.5 rounded text-[11px] font-bold font-mono whitespace-nowrap">
+                    ${levelBadge}
+                </span>
+            </div>
             
-            const card = document.createElement('div');
-            card.className = 'spell-card';
-            card.innerHTML = `
-                <div class="spell-card-title">${s.name}</div>
-                <div class="spell-card-meta">${levelText} ${s.school ? s.school.name : ''}</div>
-                <div class="spell-card-stats">
-                    <div><strong>Cast:</strong> ${s.casting_time}</div>
-                    <div><strong>Range:</strong> ${s.range}</div>
-                    <div><strong>Comp:</strong> ${comps}</div>
-                    <div><strong>Dur:</strong> ${s.duration}</div>
-                </div>
-                <div class="spell-card-desc">${desc}</div>
-            `;
-            container.appendChild(card);
-        });
-        
-    } catch (e) {
-        console.error(e);
-        container.innerHTML += '<p class="text-rose-500 col-span-full">Wystąpił problem podczas ładowania części zaklęć.</p>';
-    } finally {
-        loading.classList.add('hidden');
+            <div class="spell-card-meta flex items-center justify-between text-xs text-gray-400 mb-2">
+                <span>${schoolText}</span>
+                <div class="flex flex-wrap gap-1">${classBadges}</div>
+            </div>
+
+            <div class="spell-card-stats">
+                <div><strong>Czas:</strong> ${s.casting_time || '-'}</div>
+                <div><strong>Zasięg:</strong> ${s.range || '-'}</div>
+                <div><strong>Komp:</strong> ${s.components || '-'}</div>
+                <div><strong>Trwanie:</strong> ${s.duration || '-'}</div>
+            </div>
+
+            <div class="spell-card-desc">
+                ${formattedDesc}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+function handleSearchDebounced() {
+    const clearBtn = document.getElementById('clear-search');
+    const searchVal = document.getElementById('search-input').value;
+    if (clearBtn) {
+        if (searchVal.length > 0) {
+            clearBtn.classList.remove('hidden');
+        } else {
+            clearBtn.classList.add('hidden');
+        }
+    }
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        fetchSpells();
+    }, 250);
+}
+
+function clearSearch() {
+    const input = document.getElementById('search-input');
+    if (input) {
+        input.value = '';
+        const clearBtn = document.getElementById('clear-search');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        fetchSpells();
     }
 }
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchSpells();
+});

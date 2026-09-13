@@ -58,13 +58,42 @@ def calculate_ac(armor_type: str, dex_score: int, con_score: int = 10, wis_score
     return armor_table.get(armor_type, 10 + dex_mod)
 
 
-def apply_racial_asi(base_stats: Dict[str, int], race_key: str) -> Dict[str, int]:
-    """Apply racial ability score improvements."""
+def get_racial_asi(race_key: str, custom_asi_json: str = "") -> Dict[str, int]:
+    """Return default or validated custom racial ability score improvements."""
     race = RACES.get(race_key, {})
-    asi = race.get("asi", {})
+    if not custom_asi_json:
+        return dict(race.get("asi", {}))
+
+    try:
+        custom_asi = json.loads(custom_asi_json)
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("Nieprawidłowy format niestandardowych bonusów rasowych.") from exc
+
+    stat_keys = {"str", "dex", "con", "int", "wis", "cha"}
+    mode = custom_asi.get("mode")
+    asi = {}
+    if mode == "three_plus_one":
+        stats = custom_asi.get("stats", [])
+        if len(stats) != 3 or len(set(stats)) != 3 or not set(stats).issubset(stat_keys):
+            raise ValueError("Wybierz trzy różne cechy dla bonusu +1.")
+        asi = {stat: 1 for stat in stats}
+    elif mode == "two_plus_one":
+        plus_two = custom_asi.get("plus_two")
+        plus_one = custom_asi.get("plus_one")
+        if plus_two not in stat_keys or plus_one not in stat_keys or plus_two == plus_one:
+            raise ValueError("Wybierz dwie różne cechy dla bonusów +2 i +1.")
+        asi = {plus_two: 2, plus_one: 1}
+    else:
+        raise ValueError("Nieprawidłowy wariant niestandardowych bonusów rasowych.")
+    return asi
+
+
+def apply_racial_asi(base_stats: Dict[str, int], race_key: str, custom_asi_json: str = "") -> Dict[str, int]:
+    """Apply default or custom racial ability score improvements, capped at 20."""
+    asi = get_racial_asi(race_key, custom_asi_json)
     result = dict(base_stats)
     for stat, bonus in asi.items():
-        result[stat] = result.get(stat, 8) + bonus
+        result[stat] = min(20, result.get(stat, 8) + bonus)
     return result
 
 
@@ -168,7 +197,7 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     }
 
     # Final stats are base stats + racial ASI
-    raw_stats = apply_racial_asi(base_stats, race)
+    raw_stats = apply_racial_asi(base_stats, race, data.racial_asi_json)
 
     # Apply ASI bonuses from level-up choices
     asi_slots = []

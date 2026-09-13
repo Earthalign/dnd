@@ -10,36 +10,36 @@ import concurrent.futures
 # These are non-fatal format quirks — Python-level exceptions are still raised on real errors.
 fitz.TOOLS.mupdf_display_errors(False)
 
+from app.core.spells import SPELLS_BY_ID, get_spell_by_id
+
 def fetch_spell_data(spell_id: str, name_pl: str = None, spell_level: int = 0):
-    try:
-        url = f"https://www.dnd5eapi.co/api/spells/{spell_id.replace('_', '-')}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode())
-            return {
-                "id": spell_id,
-                "name_pl": name_pl or data.get("name"),
-                "name_en": data.get("name"),
-                "level": data.get("level", spell_level),
-                "desc": "\n".join(data.get("desc", [])),
-                "casting_time": data.get("casting_time", ""),
-                "range": data.get("range", ""),
-                "components": ", ".join(data.get("components", [])) + (f" ({data.get('material')})" if data.get("material") else ""),
-                "duration": data.get("duration", ""),
-            }
-    except Exception as e:
-        print(f"Błąd pobierania czaru {spell_id}: {e}")
+    """Pobiera dane czaru w języku polskim z lokalnej bazy Spells/."""
+    spell = get_spell_by_id(spell_id)
+    if spell:
         return {
-            "id": spell_id,
-            "name_pl": name_pl or spell_id.replace("_", " ").title(),
-            "name_en": spell_id.replace("_", " ").title(),
-            "level": spell_level,
-            "desc": "Opis tego zaklęcia nie jest dostępny w publicznym API (nie znajduje się w SRD). Zobacz odpowiedni podręcznik do D&D 5e.",
-            "casting_time": "?",
-            "range": "?",
-            "components": "?",
-            "duration": "?",
+            "id": spell.get('id', spell_id),
+            "name_pl": spell.get('name_pl') or name_pl or spell_id,
+            "name_en": spell.get('name_en') if spell.get('name_en') != spell.get('name_pl') else '',
+            "level": spell.get('level', spell_level),
+            "school": spell.get('school', ''),
+            "desc": spell.get('desc', ''),
+            "casting_time": spell.get('casting_time', ''),
+            "range": spell.get('range', ''),
+            "components": spell.get('components', ''),
+            "duration": spell.get('duration', ''),
         }
+    return {
+        "id": spell_id,
+        "name_pl": name_pl or spell_id.replace('_', ' ').title(),
+        "name_en": '',
+        "level": spell_level,
+        "school": 'Cantrip' if spell_level == 0 else f'Poziom {spell_level}',
+        "desc": 'Opis zaklęcia w przygotowaniu.',
+        "casting_time": '-',
+        "range": '-',
+        "components": '-',
+        "duration": '-',
+    }
 
 def generate_character_pdf(char_data: dict) -> bytes:
     """
@@ -251,94 +251,221 @@ def generate_character_pdf(char_data: dict) -> bytes:
 
     # --- NOWA STRONA: CZARY (SPELLBOOK) ---
     spell_ids = char_data.get("all_spell_ids", [])
+    # Only render spell cards for spells selected on the character sheet.
     if spell_ids:
-        # Pobieranie z API
         spells_info = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(fetch_spell_data, sid, name_pl, lvl) for sid, name_pl, lvl in spell_ids]
-            for future in concurrent.futures.as_completed(futures):
-                res = future.result()
-                if res:
-                    spells_info.append(res)
-        
-        if spells_info:
-            spells_info.sort(key=lambda s: (s['level'], s['name_pl']))
-            
-            CARD_WIDTH = 175
-            CARD_HEIGHT = 245
-            GAP_X = 15
-            GAP_Y = 15
-            # Center the grid on the 595x842 page
-            MARGIN_X = (595 - (3 * CARD_WIDTH + 2 * GAP_X)) / 2
-            MARGIN_Y = (842 - (3 * CARD_HEIGHT + 2 * GAP_Y)) / 2
-            
-            def init_page():
-                p = doc.new_page()
-                try:
-                    p.insert_font(fontname="roboreg", fontfile="app/static/fonts/Roboto-Regular.ttf")
-                    p.insert_font(fontname="robobold", fontfile="app/static/fonts/Roboto-Bold.ttf")
-                except:
-                    pass  # Fallback w przypadku braku pliku
-                return p
-                
-            page = init_page()
-            cards_on_page = 0
-            
-            for spell in spells_info:
-                if cards_on_page >= 9:
-                    page = init_page()
-                    cards_on_page = 0
-                
-                col = cards_on_page % 3
-                row = cards_on_page // 3
-                
-                x = MARGIN_X + col * (CARD_WIDTH + GAP_X)
-                y = MARGIN_Y + row * (CARD_HEIGHT + GAP_Y)
-                
-                # Background and Border
-                rect = fitz.Rect(x, y, x + CARD_WIDTH, y + CARD_HEIGHT)
-                page.draw_rect(rect, color=(0.6, 0.6, 0.6), fill=(1, 1, 1), width=1)
-                
-                # Header Section
-                header_rect = fitz.Rect(x, y, x + CARD_WIDTH, y + 26)
-                page.draw_rect(header_rect, color=(0.6, 0.6, 0.6), fill=(0.95, 0.95, 0.95), width=1)
-                
-                title = str(spell.get('name_pl') or spell.get('name_en') or 'Nieznane')
-                title_en = str(spell.get('name_en') or '')
-                
-                # Używamy insert_text zamiast insert_textbox, żeby uniknąć ucinania tekstu
-                page.insert_text((x+5, y+12), title, fontsize=10, fontname="robobold", color=(0, 0, 0))
-                if title_en:
-                    page.insert_text((x+5, y+22), title_en, fontsize=8, fontname="roboreg", color=(0.4, 0.4, 0.4))
-                
-                # Level/School
-                level_str = "Sztuczka (Cantrip)" if spell['level'] == 0 else f"Poziom {spell['level']}"
-                page.insert_text((x+5, y+36), level_str, fontsize=8, fontname="robobold", color=(0.2, 0.2, 0.2))
-                
-                # Divider 1
-                page.draw_line(fitz.Point(x+5, y+40), fitz.Point(x+CARD_WIDTH-5, y+40), color=(0.8, 0.8, 0.8))
-                
-                # Meta Info
-                meta_y = y + 48
-                page.insert_text((x+5, meta_y), f"Czas: {str(spell.get('casting_time', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
-                page.insert_text((x+5, meta_y+10), f"Zasięg: {str(spell.get('range', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
-                page.insert_text((x+5, meta_y+20), f"Komp: {str(spell.get('components', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
-                page.insert_text((x+5, meta_y+30), f"Trwanie: {str(spell.get('duration', ''))}", fontsize=7, fontname="roboreg", color=(0.2, 0.2, 0.2))
-                
-                # Divider 2
-                page.draw_line(fitz.Point(x+5, meta_y+34), fitz.Point(x+CARD_WIDTH-5, meta_y+34), color=(0.8, 0.8, 0.8))
-                
-                # Description
-                desc_rect = fitz.Rect(x+5, meta_y+38, x+CARD_WIDTH-5, y+CARD_HEIGHT-5)
-                desc = str(spell.get('desc', '')).replace("\n", "\n\n")
-                
-                # Ogranicz długość opisu w ostateczności
-                if len(desc) > 800:
-                    desc = desc[:797] + "..."
-                    
-                page.insert_textbox(desc_rect, desc, fontsize=6.5, fontname="roboreg", color=(0, 0, 0))
-                
-                cards_on_page += 1
+        for item in spell_ids:
+            if isinstance(item, (list, tuple)) and len(item) >= 3:
+                sid, name_pl, lvl = item[0], item[1], item[2]
+            elif isinstance(item, str):
+                sid, name_pl, lvl = item, None, 0
+            else:
+                continue
+            res = fetch_spell_data(sid, name_pl, lvl)
+            if res:
+                spells_info.append(res)
+    else:
+        spells_info = []
+
+    def insert_fitted_text(page, rect, text, fontname, color, sizes, align=0):
+        text = str(text or "-").strip() or "-"
+        for size in sizes:
+            result = page.insert_textbox(
+                rect, text, fontsize=size, fontname=fontname,
+                color=color, align=align
+            )
+            if result >= 0:
+                return
+
+        low = 1
+        high = len(text)
+        best = "-"
+        while low <= high:
+            mid = (low + high) // 2
+            candidate = text[:mid].rstrip() + "..."
+            result = page.insert_textbox(
+                rect, candidate, fontsize=sizes[-1], fontname=fontname,
+                color=color, align=align
+            )
+            if result >= 0:
+                best = candidate
+                low = mid + 1
+            else:
+                high = mid - 1
+        page.insert_textbox(
+            rect, best, fontsize=sizes[-1], fontname=fontname,
+            color=color, align=align
+        )
+
+    if spells_info:
+        spells_info.sort(key=lambda s: (s.get('level', 0), s.get('name_pl', '')))
+
+        CARD_WIDTH = 175
+        CARD_HEIGHT = 245
+        GAP_X = 15
+        GAP_Y = 15
+        MARGIN_X = (595 - (3 * CARD_WIDTH + 2 * GAP_X)) / 2
+        MARGIN_Y = (842 - (3 * CARD_HEIGHT + 2 * GAP_Y)) / 2
+
+        def init_page():
+            p = doc.new_page()
+            try:
+                curr_dir = os.path.dirname(os.path.abspath(__file__))
+                font_dir = os.path.join(os.path.dirname(curr_dir), "static", "fonts")
+                reg_font = os.path.join(font_dir, "Roboto-Regular.ttf")
+                bold_font = os.path.join(font_dir, "Roboto-Bold.ttf")
+                if not os.path.exists(reg_font):
+                    reg_font = "app/static/fonts/Roboto-Regular.ttf"
+                    bold_font = "app/static/fonts/Roboto-Bold.ttf"
+                p.insert_font(fontname="roboreg", fontfile=reg_font)
+                p.insert_font(fontname="robobold", fontfile=bold_font)
+            except Exception:
+                pass
+            return p
+
+        page = init_page()
+        cards_on_page = 0
+        school_colors = {
+            'Abjuration': (0.18, 0.38, 0.58),
+            'Conjuration': (0.42, 0.24, 0.56),
+            'Divination': (0.62, 0.42, 0.10),
+            'Enchantment': (0.15, 0.44, 0.35),
+            'Evocation': (0.62, 0.22, 0.22),
+            'Illusion': (0.32, 0.27, 0.56),
+            'Necromancy': (0.25, 0.23, 0.30),
+            'Transmutation': (0.10, 0.43, 0.45),
+            'default': (0.28, 0.32, 0.30),
+        }
+
+        for spell in spells_info:
+            if cards_on_page >= 9:
+                page = init_page()
+                cards_on_page = 0
+
+            col = cards_on_page % 3
+            row = cards_on_page // 3
+            x = MARGIN_X + col * (CARD_WIDTH + GAP_X)
+            y = MARGIN_Y + row * (CARD_HEIGHT + GAP_Y)
+            rect = fitz.Rect(x, y, x + CARD_WIDTH, y + CARD_HEIGHT)
+            page.draw_rect(rect, color=(0.16, 0.20, 0.18), fill=(0.985, 0.975, 0.92), width=0.8)
+
+            header_rect = fitz.Rect(x, y, x + CARD_WIDTH, y + 36)
+            page.draw_rect(
+                header_rect, color=(0, 0, 0),
+                fill=school_colors.get(spell.get('school'), school_colors['default']), width=0
+            )
+
+            title = spell.get('name_pl') or spell.get('name_en') or 'Nieznane'
+            title_en = spell.get('name_en') or ''
+            insert_fitted_text(page, fitz.Rect(x + 5, y + 3, x + CARD_WIDTH - 5, y + 18), title, 'robobold', (0.98, 0.98, 0.94), [11, 10, 9, 8])
+            if title_en and title_en != title:
+                insert_fitted_text(page, fitz.Rect(x + 5, y + 19, x + CARD_WIDTH - 5, y + 32), title_en, 'roboreg', (0.80, 0.88, 0.82), [8.5, 7.5, 6.5])
+
+            level = spell.get('level', 0)
+            level_str = spell.get('school') or ('Sztuczka' if level == 0 else f'Poziom {level}')
+            insert_fitted_text(page, fitz.Rect(x + 5, y + 38, x + CARD_WIDTH - 5, y + 49), level_str, 'robobold', (0.2, 0.2, 0.2), [8, 7, 6])
+            page.draw_line(fitz.Point(x + 5, y + 51), fitz.Point(x + CARD_WIDTH - 5, y + 51), color=(0.62, 0.66, 0.60), width=0.7)
+
+            meta_y = y + 55
+            col1_x = x + 5
+            col2_x = x + CARD_WIDTH / 2 + 2
+            meta_fields = [
+                (fitz.Rect(col1_x, meta_y, col2_x - 3, meta_y + 18), f"Czas: {spell.get('casting_time') or '-'}"),
+                (fitz.Rect(col2_x, meta_y, x + CARD_WIDTH - 5, meta_y + 18), f"Zasięg: {spell.get('range') or '-'}"),
+                (fitz.Rect(col1_x, meta_y + 18, col2_x - 3, meta_y + 36), f"Komp: {spell.get('components') or '-'}"),
+                (fitz.Rect(col2_x, meta_y + 18, x + CARD_WIDTH - 5, meta_y + 36), f"Trwanie: {spell.get('duration') or '-'}"),
+            ]
+            for meta_rect, meta_text in meta_fields:
+                insert_fitted_text(page, meta_rect, meta_text, 'roboreg', (0.14, 0.18, 0.15), [7, 6.3, 5.7])
+
+            page.draw_line(fitz.Point(x + 5, meta_y + 40), fitz.Point(x + CARD_WIDTH - 5, meta_y + 40), color=(0.62, 0.66, 0.60), width=0.7)
+            desc_rect = fitz.Rect(x + 6, meta_y + 46, x + CARD_WIDTH - 6, y + CARD_HEIGHT - 6)
+            desc = " ".join(str(spell.get('desc') or 'Brak opisu.').split())
+            insert_fitted_text(page, desc_rect, desc, 'roboreg', (0.12, 0.14, 0.12), [7.4, 7.0, 6.6, 6.2, 5.8])
+            cards_on_page += 1
+
+    wild_shape_forms = char_data.get("wild_shape_forms", [])
+    if wild_shape_forms:
+        card_width = 280
+        card_height = 370
+        gap_x = 15
+        gap_y = 12
+        margin_x = (595 - (2 * card_width + gap_x)) / 2
+        top_margin = 42
+
+        def new_wild_shape_page():
+            wild_page = doc.new_page()
+            try:
+                curr_dir = os.path.dirname(os.path.abspath(__file__))
+                font_dir = os.path.join(os.path.dirname(curr_dir), "static", "fonts")
+                reg_font = os.path.join(font_dir, "Roboto-Regular.ttf")
+                bold_font = os.path.join(font_dir, "Roboto-Bold.ttf")
+                if not os.path.exists(reg_font):
+                    reg_font = "app/static/fonts/Roboto-Regular.ttf"
+                    bold_font = "app/static/fonts/Roboto-Bold.ttf"
+                wild_page.insert_font(fontname="roboreg", fontfile=reg_font)
+                wild_page.insert_font(fontname="robobold", fontfile=bold_font)
+            except Exception:
+                pass
+            wild_page.insert_text(
+                (margin_x, 24), "FORMY ZWIERZĘCE DRUIDA",
+                fontsize=15, fontname="robobold", color=(0.12, 0.28, 0.18)
+            )
+            wild_page.insert_text(
+                (margin_x, 36), "Dostępne formy według poziomu i subklasy postaci",
+                fontsize=7.5, fontname="roboreg", color=(0.32, 0.38, 0.34)
+            )
+            return wild_page
+
+        page = new_wild_shape_page()
+        forms_on_page = 0
+        for form in wild_shape_forms:
+            if forms_on_page >= 4:
+                page = new_wild_shape_page()
+                forms_on_page = 0
+
+            col = forms_on_page % 2
+            row = forms_on_page // 2
+            x = margin_x + col * (card_width + gap_x)
+            y = top_margin + row * (card_height + gap_y)
+            card_rect = fitz.Rect(x, y, x + card_width, y + card_height)
+            page.draw_rect(card_rect, color=(0.16, 0.30, 0.21), fill=(0.96, 0.98, 0.95), width=0.8)
+
+            header = fitz.Rect(x, y, x + card_width, y + 31)
+            page.draw_rect(header, color=(0.10, 0.25, 0.16), fill=(0.14, 0.38, 0.23), width=0)
+            title = f"{form.get('name', 'Nieznana forma')}  |  CR {form.get('cr', '-') }"
+            insert_fitted_text(page, fitz.Rect(x + 8, y + 4, x + card_width - 8, y + 18), title, "robobold", (0.95, 0.98, 0.92), [12, 11, 10, 9])
+            insert_fitted_text(page, fitz.Rect(x + 8, y + 19, x + card_width - 8, y + 29), form.get("name_en", ""), "roboreg", (0.75, 0.88, 0.78), [8.5, 7.5, 6.5])
+
+            stat_y = y + 37
+            challenge_label = form.get("challenge", "CR " + str(form.get("cr", "-")))
+            stat_labels = [
+                f"{form.get('type', 'Bestia')}",
+                f"KP {form.get('ac', '-')}   HP {form.get('hp', '-')}   Szybkość: {form.get('speed', '-')}",
+                f"Cechy: {form.get('ability_scores', '-')}  (S, Zr, K, Int, M, Cha)",
+                f"{challenge_label}  |  Języki: {form.get('languages', '-')}",
+            ]
+            for index, stat_line in enumerate(stat_labels):
+                insert_fitted_text(page, fitz.Rect(x + 8, stat_y + index * 13, x + card_width - 8, stat_y + 12 + index * 13), stat_line, "robobold" if index == 0 else "roboreg", (0.18, 0.24, 0.19), [7.5, 6.5])
+
+            body_y = stat_y + 56
+            sections = [
+                ("Zmysły", form.get("senses", "-")),
+                ("Umiejętności", form.get("skills", "-")),
+                ("Rzuty obronne", form.get("saving_throws", "-")),
+                ("Odporności", form.get("damage_resistances", "-")),
+                ("Immunitety", f"Obrażenia: {form.get('damage_immunities', '-')} | Stany: {form.get('condition_immunities', '-')}"),
+                ("Języki", form.get("languages", "-")),
+                ("Cechy", f"{form.get('special_abilities', '-')} {form.get('features', '')}"),
+                ("Akcje", form.get("action_details", form.get("attacks", "-"))),
+            ]
+            section_height = 34
+            for index, (label, value) in enumerate(sections):
+                section_y = body_y + index * section_height
+                page.draw_line(fitz.Point(x + 8, section_y), fitz.Point(x + card_width - 8, section_y), color=(0.78, 0.84, 0.78), width=0.35)
+                insert_fitted_text(page, fitz.Rect(x + 8, section_y + 3, x + 96, section_y + 13), label.upper(), "robobold", (0.16, 0.38, 0.22), [6.5, 5.8])
+                insert_fitted_text(page, fitz.Rect(x + 96, section_y + 3, x + card_width - 8, section_y + 30), value, "roboreg", (0.18, 0.20, 0.18), [7.0, 6.5, 6.0, 5.5])
+            forms_on_page += 1
 
     pdf_bytes = doc.tobytes(garbage=4, deflate=True)
     doc.close()

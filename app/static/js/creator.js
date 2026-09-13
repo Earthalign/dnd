@@ -1,3 +1,51 @@
+
+function getSpellTooltip(s) {
+    if (!s) return '';
+    let tip = s.school ? `${s.school}\n` : '';
+    if (s.casting_time) tip += `Czas: ${s.casting_time} | `;
+    if (s.range) tip += `Zasięg: ${s.range}\n`;
+    if (s.components) tip += `Komp: ${s.components} | `;
+    if (s.duration) tip += `Trwanie: ${s.duration}\n\n`;
+    if (s.desc) tip += s.desc.slice(0, 700) + (s.desc.length > 700 ? '...' : '');
+    return tip.replace(/"/g, '&quot;');
+}
+
+let spellTooltipElement = null;
+
+function showSpellTooltip(target) {
+    if (!target.dataset.spellTooltip) return;
+    if (!spellTooltipElement) {
+        spellTooltipElement = document.createElement('div');
+        spellTooltipElement.className = 'spell-hover-tooltip';
+        document.body.appendChild(spellTooltipElement);
+    }
+    spellTooltipElement.textContent = target.dataset.spellTooltip;
+    spellTooltipElement.classList.add('visible');
+
+    const rect = target.getBoundingClientRect();
+    const tooltipWidth = Math.min(380, window.innerWidth - 24);
+    let left = rect.left + (rect.width - tooltipWidth) / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - tooltipWidth - 12));
+    let top = rect.bottom + 10;
+    if (top + 240 > window.innerHeight) top = Math.max(12, rect.top - 250);
+    spellTooltipElement.style.width = `${tooltipWidth}px`;
+    spellTooltipElement.style.left = `${left}px`;
+    spellTooltipElement.style.top = `${top}px`;
+}
+
+function hideSpellTooltip() {
+    if (spellTooltipElement) spellTooltipElement.classList.remove('visible');
+}
+
+document.addEventListener('mouseover', event => {
+    const spellItem = event.target.closest?.('.spell-select-item');
+    if (spellItem) showSpellTooltip(spellItem);
+});
+
+document.addEventListener('mouseout', event => {
+    const spellItem = event.target.closest?.('.spell-select-item');
+    if (spellItem && !spellItem.contains(event.relatedTarget)) hideSpellTooltip();
+});
 /* ==========================================================================
    D&D 5e Character Creator - Core App Logic
    ========================================================================== */
@@ -30,6 +78,13 @@ const state = {
     selectedEquipment: null,
     // Human Variant: free feat at lv1
     humanVariantFeat: '',
+    customRacialAsiEnabled: false,
+    customRacialAsi: {
+        mode: 'three_plus_one',
+        stats: ['str', 'dex', 'con'],
+        plus_two: 'str',
+        plus_one: 'dex'
+    },
 };
 for (let i = 1; i <= 9; i++) {
     state[`selectedSpells${i}`] = new Set();
@@ -42,9 +97,118 @@ function getModifier(score) {
 }
 
 function getRacialBonus(stat, raceKey) {
+    return getRacialBonuses(raceKey)[stat] || 0;
+}
+
+function getRacialBonuses(raceKey) {
+    if (state.customRacialAsiEnabled) {
+        const custom = state.customRacialAsi;
+        if (custom.mode === 'three_plus_one') {
+            return Object.fromEntries((custom.stats || []).map(stat => [stat, 1]));
+        }
+        return {
+            [custom.plus_two]: 2,
+            [custom.plus_one]: 1,
+        };
+    }
     const race = RACES[raceKey];
-    if (!race || !race.asi) return 0;
-    return race.asi[stat] || 0;
+    return race && race.asi ? race.asi : {};
+}
+
+const ABILITY_LABELS = {
+    str: 'Siła (STR)',
+    dex: 'Zręczność (DEX)',
+    con: 'Kondycja (CON)',
+    int: 'Inteligencja (INT)',
+    wis: 'Mądrość (WIS)',
+    cha: 'Charyzma (CHA)',
+};
+
+function renderCustomRacialAsi() {
+    const container = document.getElementById('custom-racial-asi');
+    const toggle = document.getElementById('custom-stats-toggle');
+    if (!container) return;
+    if (toggle) {
+        toggle.innerText = state.customRacialAsiEnabled
+            ? '✓ Używane niestandardowe statystyki'
+            : '⚙ Niestandardowe statystyki';
+        toggle.className = state.customRacialAsiEnabled
+            ? 'bg-emerald-800 hover:bg-emerald-700 border border-emerald-400/70 text-emerald-100 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(16,185,129,0.2)]'
+            : 'bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/50 hover:border-emerald-500 text-emerald-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(16,185,129,0.1)]';
+    }
+    if (!state.customRacialAsiEnabled) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    const custom = state.customRacialAsi;
+    const options = (selected, excluded = []) => Object.entries(ABILITY_LABELS)
+        .map(([key, label]) => `<option value="${key}" ${key === selected ? 'selected' : ''} ${excluded.includes(key) && key !== selected ? 'disabled' : ''}>${label}</option>`)
+        .join('');
+    let choicesHtml = '';
+    if (custom.mode === 'three_plus_one') {
+        choicesHtml = (custom.stats || []).map((stat, index) => `
+            <label class="flex-1 text-xs text-gray-400">Cecha +1
+                <select onchange="setCustomRacialStat(${index}, this.value)" class="w-full input-rpg rounded-lg px-2 py-2 text-white text-xs mt-1">${options(stat, (custom.stats || []).filter((_, i) => i !== index))}</select>
+            </label>
+        `).join('');
+    } else {
+        choicesHtml = `
+            <label class="flex-1 text-xs text-gray-400">Cecha +2
+                <select onchange="setCustomRacialStat(0, this.value)" class="w-full input-rpg rounded-lg px-2 py-2 text-white text-xs mt-1">${options(custom.plus_two, [custom.plus_one])}</select>
+            </label>
+            <label class="flex-1 text-xs text-gray-400">Cecha +1
+                <select onchange="setCustomRacialStat(1, this.value)" class="w-full input-rpg rounded-lg px-2 py-2 text-white text-xs mt-1">${options(custom.plus_one, [custom.plus_two])}</select>
+            </label>
+        `;
+    }
+    container.innerHTML = `
+        <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-bold text-emerald-300">Niestandardowe premie rasowe</h3>
+                    <p class="text-xs text-gray-400 mt-1">Zastępują premie wybranej rasy. Żadna cecha nie może przekroczyć 20.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select onchange="setCustomRacialAsiMode(this.value)" class="input-rpg rounded-lg px-2 py-2 text-white text-xs">
+                        <option value="three_plus_one" ${custom.mode === 'three_plus_one' ? 'selected' : ''}>Trzy różne cechy: +1</option>
+                        <option value="two_plus_one" ${custom.mode === 'two_plus_one' ? 'selected' : ''}>Jedna cecha: +2, inna: +1</option>
+                    </select>
+                    <button type="button" onclick="setCustomRacialAsiEnabled(false)" class="text-xs text-gray-400 hover:text-white px-2 py-2">Użyj premii rasy</button>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">${choicesHtml}</div>
+        </div>
+    `;
+}
+
+function setCustomRacialAsiEnabled(enabled) {
+    state.customRacialAsiEnabled = enabled;
+    updateUI();
+}
+
+function setCustomRacialAsiMode(mode) {
+    state.customRacialAsi.mode = mode;
+    if (mode === 'three_plus_one') {
+        state.customRacialAsi.stats = ['str', 'dex', 'con'];
+    } else {
+        state.customRacialAsi.plus_two = 'str';
+        state.customRacialAsi.plus_one = 'dex';
+    }
+    updateUI();
+}
+
+function setCustomRacialStat(slot, stat) {
+    if (state.customRacialAsi.mode === 'three_plus_one') {
+        state.customRacialAsi.stats[slot] = stat;
+    } else if (slot === 0) {
+        state.customRacialAsi.plus_two = stat;
+    } else {
+        state.customRacialAsi.plus_one = stat;
+    }
+    updateUI();
 }
 
 function calculateRemainingPoints() {
@@ -245,6 +409,7 @@ function updateUI() {
     const bg = BACKGROUNDS[bgKey];
     
     // 1. Update description panels
+    renderCustomRacialAsi();
     updateDetailsInfo(raceKey, classKey, bgKey, level, subclassKey);
     
     // 2. Update Stats and Point Buy
@@ -710,8 +875,9 @@ function updateUI() {
                 const disabledAttr = (!isChecked && state.selectedCantrips.size >= cantripLimit) ? 'disabled' : '';
                 const name = currentLang === 'en' ? s.name_en : s.name_pl;
                 const checkedClass = isChecked ? 'bg-amber-950/15 border-amber-500/35 text-amber-300 shadow-[0_2px_8px_rgba(212,175,55,0.02)]' : 'bg-gray-900/30 border-gray-850 text-gray-400 hover:border-gray-800';
+                const tip = getSpellTooltip(s);
                 cantripsHtml += `
-                    <label class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all duration-200 ${checkedClass}">
+                    <label data-spell-tooltip="${tip}" data-spell-name="${name.toLowerCase()}" class="spell-select-item flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all duration-200 ${checkedClass}">
                         <input type="checkbox" name="selected_cantrips" value="${s.id}" ${isChecked ? 'checked' : ''} ${disabledAttr}
                             onchange="toggleCantrip('${s.id}', this.checked)"
                             class="w-4 h-4 rounded border-gray-700 text-amber-500 bg-gray-900 focus:ring-amber-500 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
@@ -759,8 +925,9 @@ function updateUI() {
                     const disabledAttr = (!isChecked && totalSelectedSpells >= spellsKnownLimit) ? 'disabled' : '';
                     const name = currentLang === 'en' ? s.name_en : s.name_pl;
                     const checkedClass = isChecked ? 'bg-indigo-950/15 border-indigo-500/35 text-indigo-300 shadow-[0_2px_8px_rgba(99,102,241,0.02)]' : 'bg-gray-900/30 border-gray-850 text-gray-400 hover:border-gray-800';
+                    const tip = getSpellTooltip(s);
                     lvlHtml += `
-                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all duration-200 ${checkedClass}">
+                        <label data-spell-tooltip="${tip}" data-spell-name="${name.toLowerCase()}" class="spell-select-item flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all duration-200 ${checkedClass}">
                             <input type="checkbox" name="selected_spells_${l}" value="${s.id}" ${isChecked ? 'checked' : ''} ${disabledAttr}
                                 onchange="toggleSpell(${l}, '${s.id}', this.checked)"
                                 class="w-4 h-4 rounded border-gray-700 text-indigo-500 bg-gray-900 focus:ring-indigo-500 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
@@ -792,6 +959,23 @@ function updateUI() {
     if (state.statMode !== 'dice' && remainingPoints !== 0) {
         formIsValid = false;
         errorMessages.push(t('err_points', {n: remainingPoints}) || "Musisz wykorzystać dokładnie 27 punktów w systemie Point Buy (aktualnie pozostało: " + remainingPoints + " pkt).");
+    }
+
+    if (state.customRacialAsiEnabled) {
+        const custom = state.customRacialAsi;
+        const selectedStats = custom.mode === 'three_plus_one'
+            ? custom.stats
+            : [custom.plus_two, custom.plus_one];
+        const expectedCount = custom.mode === 'three_plus_one' ? 3 : 2;
+        if (selectedStats.length !== expectedCount || selectedStats.some(stat => !stat) || new Set(selectedStats).size !== selectedStats.length) {
+            formIsValid = false;
+            errorMessages.push("Wybierz różne cechy dla niestandardowych premii rasowych.");
+        }
+        const customBonuses = getRacialBonuses(raceKey);
+        if (Object.entries(customBonuses).some(([stat, bonus]) => state.baseStats[stat] + bonus > 20)) {
+            formIsValid = false;
+            errorMessages.push("Niestandardowa premia rasowa nie może podnieść żadnej cechy powyżej 20.");
+        }
     }
     
     if (classSelectedCount < numClassSkills) {
@@ -908,7 +1092,7 @@ function updateDetailsInfo(raceKey, classKey, bgKey, level = 1, subclassKey = nu
         const raceName = useEn && race.name_en ? race.name_en : race.name;
         const raceDesc = useEn && race.description_en ? race.description_en : race.description;
         let traitsHtml = race.traits.map(t_trait => `<li class="text-xs text-gray-400 leading-normal">• ${t_trait}</li>`).join('');
-        let asiHtml = Object.entries(race.asi).map(([s, val]) => 
+        let asiHtml = Object.entries(getRacialBonuses(raceKey)).map(([s, val]) => 
             `<span class="text-[9px] font-bold bg-amber-500/10 border border-amber-500/25 text-amber-400 px-2 py-0.5 rounded font-mono">${s.toUpperCase()} +${val}</span>`
         ).join(' ');
         
@@ -1230,6 +1414,18 @@ function renderWildShapeSection() {
             allowedForms = allowedForms.concat(FORMS[crKey]);
         }
     });
+
+    if (level >= 10 && Array.isArray(window.ELEMENTAL_FORMS)) {
+        allowedForms = allowedForms.concat(window.ELEMENTAL_FORMS);
+    }
+
+    if (level >= 10) {
+        wsContainer.innerHTML += `
+            <div class="md:col-span-2 p-3 bg-cyan-950/20 border border-cyan-700/40 rounded-xl text-xs text-cyan-200">
+                <strong>Żywiołaki od 10. poziomu:</strong> możesz wydać dwa użycia Dzikej Kształtności, aby przybrać formę żywiołaka.
+            </div>
+        `;
+    }
     
     allowedForms.forEach(form => {
         const speed = form.speed;
@@ -1318,5 +1514,34 @@ renderEquipmentSection();
 // Sync hidden form fields on submit
 document.getElementById('char-creator-form').addEventListener('submit', () => {
     document.getElementById('asi_slots_json').value = JSON.stringify(state.asiSlots);
+    document.getElementById('racial_asi_json').value = state.customRacialAsiEnabled
+        ? JSON.stringify(state.customRacialAsi)
+        : '';
     document.getElementById('human_variant_feat_hidden').value = state.humanVariantFeat || '';
 });
+
+function filterCreatorSpells(query) {
+    const q = (query || '').toLowerCase().trim();
+    const clearBtn = document.getElementById('clear-creator-spell-btn');
+    if (clearBtn) {
+        if (q.length > 0) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+    }
+    const items = document.querySelectorAll('#dynamic-spells-container .spell-select-item');
+    items.forEach(item => {
+        const spellName = item.getAttribute('data-spell-name') || '';
+        if (!q || spellName.includes(q)) {
+            item.classList.remove('hidden');
+        } else {
+            item.classList.add('hidden');
+        }
+    });
+}
+
+function clearCreatorSpellSearch() {
+    const input = document.getElementById('creator-spell-search');
+    if (input) {
+        input.value = '';
+        filterCreatorSpells('');
+    }
+}

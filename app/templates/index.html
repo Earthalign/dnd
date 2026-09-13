@@ -48,6 +48,7 @@
         <form action="/generate-pdf" method="POST" id="char-creator-form" class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             <input type="hidden" id="stat_mode" name="stat_mode" value="point_buy">
             <input type="hidden" id="asi_slots_json" name="asi_slots_json" value="">
+            <input type="hidden" id="racial_asi_json" name="racial_asi_json" value="">
             <input type="hidden" id="human_variant_feat_hidden" name="human_variant_feat" value="">
 
             <!-- COLUMN 1: IDENTITY -->
@@ -161,7 +162,7 @@
                             data-i18n="section_stats">Atrybuty i Statystyki</span>
                     </h2>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full">
                         <button type="button" onclick="loadAutoStats('try_harder')"
                             class="bg-rose-950 hover:bg-rose-900 border border-rose-700/50 hover:border-rose-500 text-rose-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.1)] whitespace-nowrap"
                             data-i18n="btn_try_harder">
@@ -176,6 +177,11 @@
                             class="bg-amber-950 hover:bg-amber-900 border border-amber-700/50 hover:border-amber-500 text-amber-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(212,175,55,0.1)] whitespace-nowrap"
                             data-i18n="btn_roll_dice">
                             🎲 Losuj Kości
+                        </button>
+                        <button type="button" id="custom-stats-toggle" onclick="setCustomRacialAsiEnabled(!state.customRacialAsiEnabled)"
+                            class="bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/50 hover:border-emerald-500 text-emerald-200 text-xs font-bold py-2.5 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(16,185,129,0.1)]"
+                            data-i18n="enable_custom_stats">
+                            ⚙ Niestandardowe statystyki
                         </button>
                     </div>
                 </div>
@@ -206,6 +212,8 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="custom-racial-asi" class="hidden bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-4 lg:p-5 shadow-inner"></div>
 
                 <!-- Stats Rows -->
                 <div class="space-y-3.5">
@@ -375,6 +383,13 @@
                         </div>
                     </div>
 
+                    <!-- Quick filter for spells -->
+                    <div class="flex items-center gap-2 bg-gray-950/60 border border-gray-800 px-3 py-2 rounded-xl text-xs">
+                        <span class="text-gray-500 text-sm">🔍</span>
+                        <input type="text" id="creator-spell-search" placeholder="Filtruj listę czarów (wpisz nazwę)..." oninput="filterCreatorSpells(this.value)" class="bg-transparent border-0 text-white text-xs w-full focus:outline-none placeholder-gray-500">
+                        <button type="button" onclick="clearCreatorSpellSearch()" class="text-xs text-gray-500 hover:text-white px-1 hidden" id="clear-creator-spell-btn">✕</button>
+                    </div>
+
                     <div id="dynamic-spells-container" class="space-y-6">
                         <!-- Spells populated by JS -->
                     </div>
@@ -504,6 +519,7 @@
         window.WEAPONS = {{ weapons | tojson }};
         window.ARMORS = {{ armors | tojson }};
         window.WILD_SHAPE_FORMS = {{ wild_shape_forms | tojson }};
+        window.ELEMENTAL_FORMS = {{ elemental_forms | tojson }};
     </script>
     <script src="/static/js/creator.js"></script>
 </body>

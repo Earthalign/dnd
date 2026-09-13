@@ -47,6 +47,7 @@ class CharacterCreateSchema(BaseModel):
     player: str = ""
     equipment_package: str = ""
     asi_slots_json: str = ""  # JSON string of ASI slots
+    racial_asi_json: str = ""  # JSON string of custom racial ability score increases
     human_variant_feat: str = ""
 
     @classmethod
@@ -98,5 +99,6 @@ class CharacterCreateSchema(BaseModel):
             player=str(form.get("player", "")),
             equipment_package=str(form.get("equipment_package", "")),
             asi_slots_json=str(form.get("asi_slots_json", "")),
+            racial_asi_json=str(form.get("racial_asi_json", "")),
             human_variant_feat=str(form.get("human_variant_feat", "")),
         )

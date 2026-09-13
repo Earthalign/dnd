@@ -139,6 +139,22 @@ RACES = {
         "description": "Silny i wytrzymały potomek człowieka i orka.",
         "subraces": {},
     },
+    "goblin": {
+        "name": "Goblin",
+        "name_en": "Goblin",
+        "asi": {"dex": 2, "con": 1},
+        "speed": 9,
+        "size": "Mały",
+        "traits": [
+            "Mroczne widzenie (18m)",
+            "Zwinna ucieczka: Możesz wykonać akcję Ukrycia lub Odskoku jako akcję dodatkową",
+            "Furia Małych: Raz na długi odpoczynek zadaj dodatkowe obrażenia równe poziomowi postaci, gdy trafisz atakiem lub zaklęciem stworzenie większe od ciebie",
+        ],
+        "languages": ["Wspólny", "Gobliński"],
+        "darkvision": True,
+        "description": "Mały, zwinny goblinoid o dużej pomysłowości i instynkcie przetrwania.",
+        "subraces": {},
+    },
     "tiefling": {
         "name": "Tiefling",
         "name_en": "Tiefling",
@@ -695,1194 +711,7 @@ SKILLS = {
     "survival": {"name": "Sztuka przetrwania", "name_en": "Survival", "stat": "wis", "desc": "Tropienie, orientacja w terenie, polowanie."}
 }
 
-SPELLS = {
-    "cantrip": [
-        {
-            "id": "acid_splash",
-            "name_pl": "Rozprysk Kwasu",
-            "name_en": "Acid Splash",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "chill_touch",
-            "name_pl": "Trupi Dotyk",
-            "name_en": "Chill Touch",
-            "classes": [
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "dancing_lights",
-            "name_pl": "Tańczące Światła",
-            "name_en": "Dancing Lights",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "eldritch_blast",
-            "name_pl": "Niesamowite Uderzenie",
-            "name_en": "Eldritch Blast",
-            "classes": [
-                "warlock"
-            ]
-        },
-        {
-            "id": "fire_bolt",
-            "name_pl": "Ognisty Pocisk",
-            "name_en": "Fire Bolt",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "guidance",
-            "name_pl": "Przewodnictwo",
-            "name_en": "Guidance",
-            "classes": [
-                "cleric",
-                "druid"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "light",
-            "name_pl": "Światło",
-            "name_en": "Light",
-            "classes": [
-                "bard",
-                "cleric",
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "mage_hand",
-            "name_pl": "Magiczna Dłoń",
-            "name_en": "Mage Hand",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "minor_illusion",
-            "name_pl": "Drobna Iluzja",
-            "name_en": "Minor Illusion",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "prestidigitation",
-            "name_pl": "Sztuczka",
-            "name_en": "Prestidigitation",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "ray_of_frost",
-            "name_pl": "Promień Mrozu",
-            "name_en": "Ray of Frost",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "sacred_flame",
-            "name_pl": "Święty Płomień",
-            "name_en": "Sacred Flame",
-            "classes": [
-                "cleric"
-            ]
-        },
-        {
-            "id": "shillelagh",
-            "name_pl": "Kij",
-            "name_en": "Shillelagh",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "shocking_grasp",
-            "name_pl": "Porażający Uścisk",
-            "name_en": "Shocking Grasp",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "thaumaturgy",
-            "name_pl": "Taumaturgia",
-            "name_en": "Thaumaturgy",
-            "classes": [
-                "cleric"
-            ]
-        },
-        {
-            "id": "vicious_mockery",
-            "name_pl": "Okrutna Drwina",
-            "name_en": "Vicious Mockery",
-            "classes": [
-                "bard"
-            ]
-        },
-        {
-            "id": "druidcraft",
-            "name_pl": "Sztuczka Druida",
-            "name_en": "Druidcraft",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "poison_spray",
-            "name_pl": "Trujący Rozprysk",
-            "name_en": "Poison Spray",
-            "classes": [
-                "druid",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "produce_flame",
-            "name_pl": "Wywołanie Płomienia",
-            "name_en": "Produce Flame",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "resistance",
-            "name_pl": "Opór",
-            "name_en": "Resistance",
-            "classes": [
-                "cleric",
-                "druid"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "thorn_whip",
-            "name_pl": "Bicz z Cierni",
-            "name_en": "Thorn Whip",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "mending",
-            "name_pl": "Naprawa",
-            "name_en": "Mending",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid",
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "word_of_radiance",
-            "name_pl": "Słowo Blasku",
-            "name_en": "Word of Radiance",
-            "classes": [
-                "cleric"
-            ]
-        },
-        {
-            "id": "toll_the_dead",
-            "name_pl": "Bicie w Dzwony",
-            "name_en": "Toll the Dead",
-            "classes": [
-                "cleric",
-                "warlock",
-                "wizard"
-            ]
-        }
-    ],
-    "level_1": [
-        {
-            "id": "alarm",
-            "name_pl": "Alarm",
-            "name_en": "Alarm",
-            "classes": [
-                "ranger",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "animal_friendship",
-            "name_pl": "Przyjaźń Zwierząt",
-            "name_en": "Animal Friendship",
-            "classes": [
-                "bard",
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "bane",
-            "name_pl": "Zguba",
-            "name_en": "Bane",
-            "classes": [
-                "bard",
-                "cleric"
-            ]
-        },
-        {
-            "id": "bless",
-            "name_pl": "Błogosławieństwo",
-            "name_en": "Bless",
-            "classes": [
-                "cleric",
-                "paladin"
-            ]
-        },
-        {
-            "id": "burning_hands",
-            "name_pl": "Płonące Dłonie",
-            "name_en": "Burning Hands",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "charm_person",
-            "name_pl": "Zauroczenie Osoby",
-            "name_en": "Charm Person",
-            "classes": [
-                "bard",
-                "druid",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "color_spray",
-            "name_pl": "Barwne Kaskady",
-            "name_en": "Color Spray",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "command",
-            "name_pl": "Rozkaz",
-            "name_en": "Command",
-            "classes": [
-                "cleric",
-                "paladin"
-            ]
-        },
-        {
-            "id": "comprehend_languages",
-            "name_pl": "Zrozumienie Języków",
-            "name_en": "Comprehend Languages",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "cure_wounds",
-            "name_pl": "Leczenie Ran",
-            "name_en": "Cure Wounds",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid",
-                "paladin",
-                "ranger"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "detect_magic",
-            "name_pl": "Wykrycie Magii",
-            "name_en": "Detect Magic",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid",
-                "paladin",
-                "ranger",
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "disguise_self",
-            "name_pl": "Zmiana Wyglądu",
-            "name_en": "Disguise Self",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "entangle",
-            "name_pl": "Oplątanie",
-            "name_en": "Entangle",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "faerie_fire",
-            "name_pl": "Ogień Faerie",
-            "name_en": "Faerie Fire",
-            "classes": [
-                "bard",
-                "druid"
-            ]
-        },
-        {
-            "id": "feather_fall",
-            "name_pl": "Piórkowe Opadanie",
-            "name_en": "Feather Fall",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "find_familiar",
-            "name_pl": "Znalezienie Chowańca",
-            "name_en": "Find Familiar",
-            "classes": [
-                "wizard"
-            ]
-        },
-        {
-            "id": "guiding_bolt",
-            "name_pl": "Naprowadzający Pocisk",
-            "name_en": "Guiding Bolt",
-            "classes": [
-                "cleric"
-            ]
-        },
-        {
-            "id": "healing_word",
-            "name_pl": "Lecznicze Słowo",
-            "name_en": "Healing Word",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid"
-            ]
-        },
-        {
-            "id": "hellish_rebuke",
-            "name_pl": "Piekielna Reprymenda",
-            "name_en": "Hellish Rebuke",
-            "classes": [
-                "warlock"
-            ]
-        },
-        {
-            "id": "heroism",
-            "name_pl": "Heroizm",
-            "name_en": "Heroism",
-            "classes": [
-                "bard",
-                "paladin"
-            ]
-        },
-        {
-            "id": "hex",
-            "name_pl": "Klątwa",
-            "name_en": "Hex",
-            "classes": [
-                "warlock"
-            ]
-        },
-        {
-            "id": "identify",
-            "name_pl": "Identyfikacja",
-            "name_en": "Identify",
-            "classes": [
-                "bard",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "inflict_wounds",
-            "name_pl": "Zadawanie Ran",
-            "name_en": "Inflict Wounds",
-            "classes": [
-                "cleric"
-            ]
-        },
-        {
-            "id": "mage_armor",
-            "name_pl": "Zbroja Maga",
-            "name_en": "Mage Armor",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "magic_missile",
-            "name_pl": "Magiczny Pocisk",
-            "name_en": "Magic Missile",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "sanctuary",
-            "name_pl": "Sanktuarium",
-            "name_en": "Sanctuary",
-            "classes": [
-                "cleric"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "shield",
-            "name_pl": "Tarcza",
-            "name_en": "Shield",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "sleep",
-            "name_pl": "Uśpienie",
-            "name_en": "Sleep",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "thunderwave",
-            "name_pl": "Fala Gromu",
-            "name_en": "Thunderwave",
-            "classes": [
-                "bard",
-                "druid",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "absorb_elements",
-            "name_pl": "Absorpcja Żywiołów",
-            "name_en": "Absorb Elements",
-            "classes": [
-                "druid",
-                "ranger",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "ice_knife",
-            "name_pl": "Lodowy Nóż",
-            "name_en": "Ice Knife",
-            "classes": [
-                "druid",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "goodberry",
-            "name_pl": "Dobre Jagody",
-            "name_en": "Goodberry",
-            "classes": [
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "speak_with_animals",
-            "name_pl": "Rozmowa ze Zwierzętami",
-            "name_en": "Speak with Animals",
-            "classes": [
-                "bard",
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "fog_cloud",
-            "name_pl": "Mglista Chmura",
-            "name_en": "Fog Cloud",
-            "classes": [
-                "druid",
-                "ranger",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "jump",
-            "name_pl": "Skok",
-            "name_en": "Jump",
-            "classes": [
-                "druid",
-                "ranger",
-                "sorcerer",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "longstrider",
-            "name_pl": "Cwał",
-            "name_en": "Longstrider",
-            "classes": [
-                "bard",
-                "druid",
-                "ranger",
-                "wizard"
-            ,
-                "artificer"]
-        },
-        {
-            "id": "purify_food_and_drink",
-            "name_pl": "Oczyszczenie Jedzenia i Picia",
-            "name_en": "Purify Food and Drink",
-            "classes": [
-                "cleric",
-                "druid",
-                "paladin"
-            ,
-                "artificer"]
-        }
-    ],
-    "level_2": [
-        {
-            "id": "blindness_deafness",
-            "name_pl": "Ślepota/Głuchota",
-            "name_en": "Blindness/Deafness",
-            "classes": [
-                "bard",
-                "cleric",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "blur",
-            "name_pl": "Rozmycie",
-            "name_en": "Blur",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "darkness",
-            "name_pl": "Ciemność",
-            "name_en": "Darkness",
-            "classes": [
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "hold_person",
-            "name_pl": "Unieruchomienie Osoby",
-            "name_en": "Hold Person",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "invisibility",
-            "name_pl": "Niewidzialność",
-            "name_en": "Invisibility",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "misty_step",
-            "name_pl": "Krok Mgły",
-            "name_en": "Misty Step",
-            "classes": [
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "scorching_ray",
-            "name_pl": "Piekący Promień",
-            "name_en": "Scorching Ray",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "shatter",
-            "name_pl": "Roztrzaskanie",
-            "name_en": "Shatter",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "spiritual_weapon",
-            "name_pl": "Duchowa Broń",
-            "name_en": "Spiritual Weapon",
-            "classes": [
-                "cleric"
-            ]
-        },
-        {
-            "id": "pass_without_trace",
-            "name_pl": "Przejście bez Śladu",
-            "name_en": "Pass without Trace",
-            "classes": [
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "spike_growth",
-            "name_pl": "Wzrost Kolców",
-            "name_en": "Spike Growth",
-            "classes": [
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "moonbeam",
-            "name_pl": "Promień Księżyca",
-            "name_en": "Moonbeam",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "flaming_sphere",
-            "name_pl": "Płonąca Kula",
-            "name_en": "Flaming Sphere",
-            "classes": [
-                "druid",
-                "wizard"
-            ]
-        },
-        {
-            "id": "barkskin",
-            "name_pl": "Kora",
-            "name_en": "Barkskin",
-            "classes": [
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "heat_metal",
-            "name_pl": "Rozgrzanie Metalu",
-            "name_en": "Heat Metal",
-            "classes": [
-                "bard",
-                "druid"
-            ]
-        },
-        {
-            "id": "enhance_ability",
-            "name_pl": "Wzmocnienie Cecha",
-            "name_en": "Enhance Ability",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid",
-                "sorcerer"
-            ]
-        }
-    ],
-    "level_3": [
-        {
-            "id": "counterspell",
-            "name_pl": "Kontrzaklęcie",
-            "name_en": "Counterspell",
-            "classes": [
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "dispel_magic",
-            "name_pl": "Rozproszenie Magii",
-            "name_en": "Dispel Magic",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid",
-                "paladin",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "fireball",
-            "name_pl": "Kula Ognia",
-            "name_en": "Fireball",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "fly",
-            "name_pl": "Lot",
-            "name_en": "Fly",
-            "classes": [
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "haste",
-            "name_pl": "Przyspieszenie",
-            "name_en": "Haste",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "lightning_bolt",
-            "name_pl": "Piorun",
-            "name_en": "Lightning Bolt",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "revivify",
-            "name_pl": "Ożywienie",
-            "name_en": "Revivify",
-            "classes": [
-                "cleric",
-                "paladin"
-            ]
-        },
-        {
-            "id": "call_lightning",
-            "name_pl": "Wezwanie Błyskawic",
-            "name_en": "Call Lightning",
-            "classes": [
-                "druid"
-            ]
-        },
-        {
-            "id": "plant_growth",
-            "name_pl": "Wzrost Roślin",
-            "name_en": "Plant Growth",
-            "classes": [
-                "bard",
-                "druid",
-                "ranger"
-            ]
-        },
-        {
-            "id": "sleet_storm",
-            "name_pl": "Burza Śnieżna",
-            "name_en": "Sleet Storm",
-            "classes": [
-                "druid",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "water_breathing",
-            "name_pl": "Oddychanie pod Wodą",
-            "name_en": "Water Breathing",
-            "classes": [
-                "druid",
-                "ranger",
-                "sorcerer",
-                "wizard"
-            ]
-        }
-    ],
-    "level_4": [
-        {
-            "id": "banishment",
-            "name_pl": "Wygnanie",
-            "name_en": "Banishment",
-            "classes": [
-                "cleric",
-                "paladin",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "blight",
-            "name_pl": "Zaraza",
-            "name_en": "Blight",
-            "classes": [
-                "druid",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "dimension_door",
-            "name_pl": "Drzwi przez Wymiary",
-            "name_en": "Dimension Door",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "greater_invisibility",
-            "name_pl": "Większa Niewidzialność",
-            "name_en": "Greater Invisibility",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "polymorph",
-            "name_pl": "Polimorfia",
-            "name_en": "Polymorph",
-            "classes": [
-                "bard",
-                "druid",
-                "sorcerer",
-                "wizard"
-            ]
-        }
-    ],
-    "level_5": [
-        {
-            "id": "cloudkill",
-            "name_pl": "Zabójcza Chmura",
-            "name_en": "Cloudkill",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "cone_of_cold",
-            "name_pl": "Stożek Zimna",
-            "name_en": "Cone of Cold",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "greater_restoration",
-            "name_pl": "Większe Uzdrowienie",
-            "name_en": "Greater Restoration",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid"
-            ]
-        },
-        {
-            "id": "hold_monster",
-            "name_pl": "Unieruchomienie Potwora",
-            "name_en": "Hold Monster",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "mass_cure_wounds",
-            "name_pl": "Masowe Leczenie Ran",
-            "name_en": "Mass Cure Wounds",
-            "classes": [
-                "bard",
-                "cleric",
-                "druid"
-            ]
-        }
-    ],
-    "level_6": [
-        {
-            "id": "chain_lightning",
-            "name_pl": "Łańcuch Piorunów",
-            "name_en": "Chain Lightning",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "disintegrate",
-            "name_pl": "Dezintegracja",
-            "name_en": "Disintegrate",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "heal",
-            "name_pl": "Uzdrawianie",
-            "name_en": "Heal",
-            "classes": [
-                "cleric",
-                "druid"
-            ]
-        },
-        {
-            "id": "sunbeam",
-            "name_pl": "Promień Słońca",
-            "name_en": "Sunbeam",
-            "classes": [
-                "druid",
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "true_seeing",
-            "name_pl": "Prawdziwe Widzenie",
-            "name_en": "True Seeing",
-            "classes": [
-                "bard",
-                "cleric",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        }
-    ],
-    "level_7": [
-        {
-            "id": "delayed_blast_fireball",
-            "name_pl": "Opóźniona Kula Ognia",
-            "name_en": "Delayed Blast Fireball",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "finger_of_death",
-            "name_pl": "Palec Śmierci",
-            "name_en": "Finger of Death",
-            "classes": [
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "forcecage",
-            "name_pl": "Klatka Mocy",
-            "name_en": "Forcecage",
-            "classes": [
-                "bard",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "plane_shift",
-            "name_pl": "Przesunięcie Planów",
-            "name_en": "Plane Shift",
-            "classes": [
-                "cleric",
-                "druid",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "resurrection",
-            "name_pl": "Zmartwychwstanie",
-            "name_en": "Resurrection",
-            "classes": [
-                "bard",
-                "cleric"
-            ]
-        }
-    ],
-    "level_8": [
-        {
-            "id": "antimagic_field",
-            "name_pl": "Pole Antymagiczne",
-            "name_en": "Antimagic Field",
-            "classes": [
-                "cleric",
-                "wizard"
-            ]
-        },
-        {
-            "id": "dominate_monster",
-            "name_pl": "Zdominowanie Potwora",
-            "name_en": "Dominate Monster",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "feeblemind",
-            "name_pl": "Słaboumysłowość",
-            "name_en": "Feeblemind",
-            "classes": [
-                "bard",
-                "druid",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "incendiary_cloud",
-            "name_pl": "Zapalająca Chmura",
-            "name_en": "Incendiary Cloud",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "sunburst",
-            "name_pl": "Eksplozja Słońca",
-            "name_en": "Sunburst",
-            "classes": [
-                "druid",
-                "sorcerer",
-                "wizard"
-            ]
-        }
-    ],
-    "level_9": [
-        {
-            "id": "meteor_swarm",
-            "name_pl": "Rój Meteorów",
-            "name_en": "Meteor Swarm",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "power_word_kill",
-            "name_pl": "Słowo Mocy: Giń",
-            "name_en": "Power Word Kill",
-            "classes": [
-                "bard",
-                "sorcerer",
-                "warlock",
-                "wizard"
-            ]
-        },
-        {
-            "id": "time_stop",
-            "name_pl": "Zatrzymanie Czasu",
-            "name_en": "Time Stop",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        },
-        {
-            "id": "true_resurrection",
-            "name_pl": "Prawdziwe Zmartwychwstanie",
-            "name_en": "True Resurrection",
-            "classes": [
-                "cleric",
-                "druid"
-            ]
-        },
-        {
-            "id": "wish",
-            "name_pl": "Życzenie",
-            "name_en": "Wish",
-            "classes": [
-                "sorcerer",
-                "wizard"
-            ]
-        }
-    ]
-}
+from app.core.spells import SPELLS, SPELLS_BY_ID, get_spell_by_id, get_spells
 
 STAT_NAMES = {
     "str": "Siła",
@@ -2041,3 +870,131 @@ WILD_SHAPE_FORMS = {
         {"name": "Mamut", "name_en": "Mammoth", "cr": 6, "hp": 126, "ac": 13, "speed": "12m", "attacks": "Gore (+9 trafienie, 4k8+7 kłute)", "features": "Szarża dająca Przewrócenie + Atak Stomp z bonusem 4k10+7."}
     ]
 }
+
+_WILD_SHAPE_DETAILS = {
+    "Kot": ("Malutka bestia", "3, 15, 10, 3, 12, 7", "Percepcja +3, Skradanie +4", "Bierne 13; węch i słuch", "Ostry słuch i węch"),
+    "Borsuk": ("Mała bestia", "13, 11, 12, 2, 12, 5", "Percepcja +3", "Mroczne widzenie 9 m; bierne 13; węch", "Ostry węch"),
+    "Sowa": ("Malutka bestia", "3, 17, 8, 2, 13, 7", "Percepcja +3, Skradanie +5", "Mroczne widzenie 36 m; bierne 13; ostry słuch i wzrok", "Przelot: nie prowokuje ataków okazyjnych"),
+    "Mastif": ("Średnia bestia", "13, 14, 12, 3, 12, 7", "Percepcja +3", "Bierne 13; ostry słuch i węch", "Ostry słuch i węch"),
+    "Gigantyczny Szczur": ("Mała bestia", "7, 15, 11, 2, 10, 4", "Percepcja +2", "Mroczne widzenie 18 m; bierne 12; węch", "Taktyka stada"),
+    "Wilk": ("Średnia bestia", "12, 15, 12, 3, 12, 6", "Percepcja +3, Skradanie +4", "Bierne 13; ostry słuch i węch", "Taktyka stada; przewrócenie celu"),
+    "Gigantyczny Borsuk": ("Średnia bestia", "13, 10, 15, 2, 12, 5", "Percepcja +3", "Mroczne widzenie 18 m; bierne 13; węch", "Ostry węch; kopanie"),
+    "Dzik": ("Średnia bestia", "13, 11, 12, 2, 9, 5", "", "Bierne 9; węch", "Szarża; niezłomność"),
+    "Pantera": ("Średnia bestia", "14, 15, 10, 3, 14, 7", "Percepcja +4, Skradanie +6", "Mroczne widzenie 18 m; bierne 14; węch", "Skok z zasadzki"),
+    "Czarny Niedźwiedź": ("Średnia bestia", "19, 10, 16, 2, 13, 7", "Percepcja +3", "Bierne 13; węch", "Ostry węch"),
+    "Małpa": ("Średnia bestia", "16, 14, 14, 6, 12, 7", "Atletyka +5", "Bierne 11", "Wspinaczka; używa prostych przedmiotów"),
+    "Koń Bojowy": ("Duża bestia", "18, 12, 13, 2, 12, 7", "", "Bierne 11", "Szarża z tratowaniem"),
+    "Niedźwiedź Brunatny": ("Duża bestia", "19, 10, 16, 2, 13, 7", "Percepcja +3", "Bierne 13; węch", "Ostry węch"),
+    "Wilkor": ("Duża bestia", "17, 15, 15, 3, 12, 7", "Percepcja +3, Skradanie +4", "Mroczne widzenie 18 m; bierne 13; słuch i węch", "Taktyka stada; przewrócenie celu"),
+    "Gigantyczny Pająk": ("Duża bestia", "14, 16, 12, 2, 11, 4", "Skradanie +7", "Mroczne widzenie 18 m; ślepowidzenie 3 m", "Chodzenie po pajęczynie; wyczucie sieci; sieć"),
+    "Lew": ("Duża bestia", "17, 15, 13, 3, 12, 8", "Percepcja +3, Skradanie +6", "Mroczne widzenie 18 m; bierne 13; słuch i węch", "Taktyka stada; skok z zasadzki"),
+    "Gigantyczny Dusiciel": ("Ogromna bestia", "19, 14, 12, 1, 10, 3", "Percepcja +4", "Ślepowidzenie 3 m; bierne 14; węch", "Duszenie; chwyta cel"),
+    "Niedźwiedź Polarny": ("Duża bestia", "20, 10, 16, 2, 13, 7", "Percepcja +3", "Bierne 13; węch", "Ostry węch; pływanie"),
+    "Gigantyczny Dzik": ("Duża bestia", "17, 10, 16, 2, 13, 5", "", "Bierne 11; węch", "Szarża; niezłomność"),
+    "Alozaur": ("Duża bestia", "19, 13, 13, 2, 12, 5", "Percepcja +3", "Bierne 13; węch", "Skok z zasadzki"),
+    "Ankylozaur": ("Ogromna bestia", "19, 11, 15, 2, 12, 5", "", "Bierne 11", "Ogon może przewrócić cel"),
+    "Orka": ("Ogromna bestia", "19, 12, 13, 3, 12, 7", "Percepcja +3", "Echolokacja 36 m; ślepowidzenie 36 m", "Wstrzymywanie oddechu"),
+    "Słoń": ("Ogromna bestia", "22, 9, 17, 3, 11, 6", "Percepcja +3", "Bierne 13; węch", "Szarża z tratowaniem"),
+    "Stegozaur": ("Ogromna bestia", "20, 12, 17, 2, 11, 5", "", "Bierne 10", "Ogon uderza w cel za plecami"),
+    "Gigantyczny Krokodyl": ("Ogromna bestia", "21, 9, 17, 2, 10, 7", "Skradanie +5", "Bierne 10; wstrzymywanie oddechu", "Chwyta i unieruchamia; wstrzymywanie oddechu"),
+    "Triceratops": ("Ogromna bestia", "22, 9, 17, 2, 11, 5", "", "Bierne 10", "Szarża z tratowaniem"),
+    "Mamut": ("Ogromna bestia", "24, 9, 21, 3, 11, 6", "", "Bierne 10; węch", "Szarża z tratowaniem"),
+}
+
+_WILD_SHAPE_ACTIONS = {
+    "Kot": "Pazury: +0 do trafienia, 1 obrażenie tnące.",
+    "Borsuk": "Ugryzienie: +2 do trafienia, 1 obrażenie kłute.",
+    "Sowa": "Szpony: +3 do trafienia, 1 obrażenie tnące.",
+    "Mastif": "Ugryzienie: +3 do trafienia, 1k6+1 obrażeń kłutych; ST 11 Siła lub przewrócenie.",
+    "Gigantyczny Szczur": "Ugryzienie: +4 do trafienia, 1k4+2 obrażeń kłutych.",
+    "Wilk": "Ugryzienie: +4 do trafienia, 2k4+2 obrażeń kłutych; ST 11 Siła lub przewrócenie.",
+    "Gigantyczny Borsuk": "Wielokrotny atak: ugryzienie +3, 1k6+1 kłutych oraz pazury +3, 1k4+1 tnących.",
+    "Dzik": "Kły: +3 do trafienia, 1k6+1 obrażeń tnących.",
+    "Pantera": "Ugryzienie: +4 do trafienia, 1k6+2 kłutych; pazury: +4, 1k4+2 tnących; skok może dać dodatkowe pazury.",
+    "Czarny Niedźwiedź": "Wielokrotny atak: ugryzienie +5, 1k8+4 kłutych oraz pazury +5, 2k6+4 tnących.",
+    "Małpa": "Pięść: +5 do trafienia, 1k6+3 obrażeń obuchowych; kamień: +5, 1k6+3 obuchowych na dystans.",
+    "Koń Bojowy": "Kopyta: +6 do trafienia, 2k6+4 obrażeń obuchowych; po szarży cel wykonuje ST 14 Siła.",
+    "Niedźwiedź Brunatny": "Wielokrotny atak: ugryzienie +6, 1k8+4 kłutych oraz pazury +6, 2k6+4 tnących.",
+    "Wilkor": "Ugryzienie: +5 do trafienia, 2k6+3 obrażeń kłutych; ST 13 Siła lub przewrócenie.",
+    "Gigantyczny Pająk": "Ugryzienie: +5 do trafienia, 1k8+3 kłutych oraz 2k8 trucizny; ST 11 Kondycja, połowa przy udanym rzucie.",
+    "Lew": "Wielokrotny atak: ugryzienie +5, 1k8+3 kłutych oraz pazury +5, 1k4+3 tnących; skok z zasadzki.",
+    "Gigantyczny Dusiciel": "Ugryzienie: +6 do trafienia, 2k6+4 kłutych; duszenie: +6, 2k8+4 obuchowych i chwyt.",
+    "Niedźwiedź Polarny": "Wielokrotny atak: ugryzienie +7, 1k8+5 kłutych oraz pazury +7, 2k6+5 tnących.",
+    "Gigantyczny Dzik": "Kły: +5 do trafienia, 2k6+5 obrażeń tnących; szarża dodaje 2k6.",
+    "Alozaur": "Wielokrotny atak: ugryzienie +6, 2k10+4 kłutych oraz pazury +6, 1k8+2 tnących.",
+    "Ankylozaur": "Ogon: +7 do trafienia, 4k6+4 obrażeń obuchowych; ST 14 Siła lub przewrócenie.",
+    "Orka": "Ugryzienie: +6 do trafienia, 5k6+4 obrażeń kłutych.",
+    "Słoń": "Wielokrotny atak: cios kłem +8, 3k8+6 kłutych oraz tratowanie +8, 3k10+6 obuchowych.",
+    "Stegozaur": "Ogon: +7 do trafienia, 6k6+5 obrażeń kłutych; cel musi być za stworzeniem.",
+    "Gigantyczny Krokodyl": "Wielokrotny atak: ugryzienie +8, 3k10+5 kłutych oraz ogon +8, 2k8+5 obuchowych.",
+    "Triceratops": "Gore: +9 do trafienia, 4k8+6 obrażeń kłutych; kopyta: +9, 3k10+6 obuchowych po szarży.",
+    "Mamut": "Wielokrotny atak: gore +9, 4k8+7 kłutych oraz tratowanie +9, 4k10+7 obuchowych.",
+}
+
+for _forms in WILD_SHAPE_FORMS.values():
+    for _form in _forms:
+        _details = _WILD_SHAPE_DETAILS.get(_form["name"])
+        if _details:
+            _form.update({
+                "type": _details[0],
+                "ability_scores": _details[1],
+                "skills": _details[2],
+                "senses": _details[3],
+                "special_abilities": _details[4],
+            })
+            _form["action_details"] = _WILD_SHAPE_ACTIONS.get(_form["name"], _form.get("attacks", "-"))
+            _form.setdefault("saving_throws", "brak")
+            _form.setdefault("damage_resistances", "brak")
+            _form.setdefault("damage_immunities", "brak")
+            _form.setdefault("condition_immunities", "brak")
+            _form.setdefault("languages", "brak")
+            _form.setdefault("challenge", f"CR {_form.get('cr', '-')}; biegłość +{2 + int(float(_form.get('cr', 0)) // 4)}")
+
+    ELEMENTAL_FORMS = [
+        {
+            "name": "Żywiołak Powietrza", "name_en": "Air Elemental", "cr": 5,
+            "hp": 90, "ac": 15, "speed": "lot 27m (zawis)", "type": "Duży żywiołak",
+            "ability_scores": "14, 20, 14, 6, 10, 6", "skills": "", "senses": "Mroczne widzenie 18 m; ślepowidzenie 18 m",
+            "special_abilities": "Forma powietrzna; może przechodzić przez przestrzeń stworzeń i małych otworów.",
+            "attacks": "Wielokrotny atak: 2 uderzenia.",
+            "action_details": "Uderzenie: +8 do trafienia, 2k8+5 obrażeń obuchowych. Wir: stworzenia w przestrzeni wykonują ST 13 Siła.",
+            "features": "Wir może przewracać i przenosić stworzenia; odporność na niemagiczne obrażenia obuchowe, kłute i tnące."
+        },
+        {
+            "name": "Żywiołak Ziemi", "name_en": "Earth Elemental", "cr": 5,
+            "hp": 126, "ac": 17, "speed": "9m, kopanie 9m", "type": "Duży żywiołak",
+            "ability_scores": "20, 8, 20, 5, 10, 5", "skills": "", "senses": "Mroczne widzenie 18 m; tremorsense 18 m",
+            "special_abilities": "Przebijanie przez ziemię; może przechodzić przez kamień i ziemię bez naruszania konstrukcji.",
+            "attacks": "Wielokrotny atak: 2 uderzenia.",
+            "action_details": "Uderzenie: +8 do trafienia, 2k8+5 obrażeń obuchowych.",
+            "features": "Odporność na niemagiczne obrażenia obuchowe, kłute i tnące."
+        },
+        {
+            "name": "Żywiołak Ognia", "name_en": "Fire Elemental", "cr": 5,
+            "hp": 102, "ac": 13, "speed": "15m", "type": "Duży żywiołak",
+            "ability_scores": "10, 17, 16, 6, 10, 7", "skills": "", "senses": "Mroczne widzenie 18 m",
+            "special_abilities": "Forma ognia; podpala obiekty i przechodzi przez szczeliny; odporność na ogień.",
+            "attacks": "Wielokrotny atak: 2 dotknięcia.",
+            "action_details": "Dotknięcie: +6 do trafienia, 2k6+3 obrażeń od ognia; cel może zapłonąć.",
+            "features": "Odporność na obrażenia obuchowe, kłute i tnące; niewrażliwość na ogień i truciznę."
+        },
+        {
+            "name": "Żywiołak Wody", "name_en": "Water Elemental", "cr": 5,
+            "hp": 114, "ac": 14, "speed": "9m, pływanie 27m", "type": "Duży żywiołak",
+            "ability_scores": "18, 14, 18, 5, 10, 8", "skills": "", "senses": "Ślepowidzenie 18 m",
+            "special_abilities": "Forma wodna; może wejść w przestrzeń stworzenia i przeciskać się przez szczeliny.",
+            "attacks": "Wielokrotny atak: 2 uderzenia.",
+            "action_details": "Uderzenie: +7 do trafienia, 2k8+4 obrażeń obuchowych. Wir: ST 15 Siła, 2k8 obrażeń i pochwycenie.",
+            "features": "Odporność na niemagiczne obrażenia obuchowe, kłute i tnące; oddycha pod wodą."
+        },
+    ]
+
+    for _elemental in ELEMENTAL_FORMS:
+        _elemental.update({
+            "saving_throws": "brak",
+            "damage_resistances": "kwas, zimno, ogień, pioruny, grzmoty",
+            "damage_immunities": "trucizna",
+            "condition_immunities": "wyczerpanie, skrępowanie, paraliż, skamienienie, zatrucie, przewrócenie",
+            "languages": "Auran / Terran / Ignan / Aquan (zależnie od formy)",
+            "challenge": "CR 5; biegłość +3",
+        })

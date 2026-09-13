@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import random
 
-from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, FEATS, WILD_SHAPE_FORMS
+from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, FEATS, WILD_SHAPE_FORMS, ELEMENTAL_FORMS, SPELLS_BY_ID, get_spells
 from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS
 from app.core import progression
 from app.schemas.character import CharacterCreateSchema
@@ -16,13 +16,19 @@ from app.services.character import (
 )
 from app.services.pdf import generate_character_pdf
 
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "app", "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "app", "templates")
+
 app = FastAPI(title="D&D 5e Character Creator")
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Setup HTML templates
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -40,6 +46,7 @@ async def index(request: Request):
             "weapons": WEAPONS,
             "armors": ARMORS,
             "wild_shape_forms": WILD_SHAPE_FORMS,
+            "elemental_forms": ELEMENTAL_FORMS,
             "progression": {
                 "PROFICIENCY_BY_LEVEL": progression.PROFICIENCY_BY_LEVEL,
                 "SUBCLASS_LEVEL": progression.SUBCLASS_LEVEL,
@@ -60,6 +67,11 @@ async def index(request: Request):
 @app.get("/spellbook", response_class=HTMLResponse)
 async def spellbook(request: Request):
     return templates.TemplateResponse(request=request, name="spellbook.html")
+
+@app.get("/api/spells")
+async def api_get_spells(class_name: str = None, level: str = None, search: str = None):
+    """Endpoint zwracający zaklęcia z polskiej bazy czarów (katalog Spells/ CSV)."""
+    return get_spells(class_name=class_name, level=level, search=search)
 
 @app.post("/api/auto-stats")
 async def api_auto_stats(data: dict):
@@ -117,22 +129,39 @@ async def api_auto_character(data: dict = {}):
         choices = list(SKILLS.keys())
     skills = random.sample(choices, min(num_skills, len(choices)))
 
-    # Cantrips: pick random cantrips for spellcasting classes
+    # Cantrips i czary: dobór zaklęć na każdy poziom zaawansowania (kręgi 0-9)
     cantrips = []
-    spell_lvls = {}
+    spell_lvls = {f"spells_{i}": [] for i in range(1, 10)}
     caster_type = progression.CASTER_TYPE.get(char_class, "none")
     if caster_type != "none":
+        # 1. Sztuczki (Cantrips)
         class_cantrips = [s["id"] for s in SPELLS.get("cantrip", []) if char_class in s["classes"]]
-        # Pick cantrip count from progression
         ct_known = progression.CANTRIPS_KNOWN.get(char_class, {})
         ct_count = 0
         for l in sorted(ct_known.keys()):
-            if level >= l: ct_count = ct_known[l]
-        cantrips = random.sample(class_cantrips, min(ct_count, len(class_cantrips)))
+            if level >= l:
+                ct_count = ct_known[l]
+        if class_cantrips and ct_count > 0:
+            cantrips = random.sample(class_cantrips, min(ct_count, len(class_cantrips)))
         
-        # Pick 1-2 level 1 spells
-        l1_spells = [s["id"] for s in SPELLS.get("level_1", []) if char_class in s["classes"]]
-        spell_lvls["spells_1"] = random.sample(l1_spells, min(2, len(l1_spells)))
+        # 2. Wyznaczenie maksymalnego kręgu zaklęć na danym poziomie postaci
+        max_circle = 0
+        if caster_type == "full":
+            slots_list = progression.FULL_CASTER_SLOTS.get(level, [])
+            max_circle = max([i + 1 for i, count in enumerate(slots_list) if count > 0], default=0)
+        elif caster_type in ("half", "artificer"):
+            slots_list = progression.HALF_CASTER_SLOTS.get(level, [])
+            max_circle = max([i + 1 for i, count in enumerate(slots_list) if count > 0], default=0)
+        elif caster_type == "pact":
+            w_info = progression.WARLOCK_SLOTS.get(level, {"slot_level": 1})
+            max_circle = w_info.get("slot_level", 1)
+        
+        # 3. Dobór zaklęć dla wszystkich odblokowanych kręgów
+        for lvl_circle in range(1, max_circle + 1):
+            circle_spells = [s["id"] for s in SPELLS.get(f"level_{lvl_circle}", []) if char_class in s["classes"]]
+            if circle_spells:
+                pick_num = min(len(circle_spells), 3 if lvl_circle <= 2 else 2)
+                spell_lvls[f"spells_{lvl_circle}"] = random.sample(circle_spells, pick_num)
 
     # ASI slots
     asi_level_list = [l for l in (progression.ASI_LEVELS.get(char_class) or []) if level >= l]
@@ -197,17 +226,19 @@ async def generate_pdf(request: Request):
             raise HTTPException(status_code=400, detail=err_msg)
             
     # Build complete character sheet calculations
-    sheet = build_character_sheet(form_data)
+    try:
+        sheet = build_character_sheet(form_data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
-    # Map selected spells to Polish names for the PDF sheet
+    # Mapowanie wybranych zaklęć na nazwy i pełne obiekty z polskiej bazy
     cantrip_names = []
     all_spell_ids = []
     for spell_id in form_data.selected_cantrips:
-        for s in SPELLS.get("cantrip", []):
-            if s["id"] == spell_id:
-                cantrip_names.append(s["name_pl"])
-                all_spell_ids.append((spell_id, s["name_pl"], 0))
-                break
+        s = SPELLS_BY_ID.get(spell_id)
+        if s:
+            cantrip_names.append(s["name_pl"])
+            all_spell_ids.append((spell_id, s["name_pl"], 0))
     
     sheet["cantrip_names"] = cantrip_names
     
@@ -215,14 +246,34 @@ async def generate_pdf(request: Request):
         spell_names = []
         selected = getattr(form_data, f"selected_spells_{level}")
         for spell_id in selected:
-            for s in SPELLS.get(f"level_{level}", []):
-                if s["id"] == spell_id:
-                    spell_names.append(s["name_pl"])
-                    all_spell_ids.append((spell_id, s["name_pl"], level))
-                    break
+            s = SPELLS_BY_ID.get(spell_id)
+            if s:
+                spell_names.append(s["name_pl"])
+                all_spell_ids.append((spell_id, s["name_pl"], level))
         sheet[f"spell{level}_names"] = spell_names
     
     sheet["all_spell_ids"] = all_spell_ids
+
+    if form_data.char_class == "druid" and form_data.level >= 2:
+        if form_data.subclass == "moon":
+            max_cr = (form_data.level // 3) if form_data.level >= 6 else 1
+        elif form_data.level >= 8:
+            max_cr = 1
+        elif form_data.level >= 4:
+            max_cr = 0.5
+        else:
+            max_cr = 0.25
+
+        sheet["wild_shape_forms"] = [
+            form
+            for cr, forms in WILD_SHAPE_FORMS.items()
+            if cr <= max_cr
+            for form in forms
+        ]
+        if form_data.level >= 10:
+            sheet["wild_shape_forms"].extend(ELEMENTAL_FORMS)
+    else:
+        sheet["wild_shape_forms"] = []
     
     # Generate PDF in-memory (returning bytes)
     try:
