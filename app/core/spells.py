@@ -321,6 +321,24 @@ def load_spells_database():
 # Module-level singletons initialized on load
 SPELLS, SPELLS_BY_ID = load_spells_database()
 
+BOOMING_BLADE = {
+    "id": "booming_blade",
+    "name_pl": "Grzmiące Ostrze",
+    "name_en": "Booming Blade",
+    "raw_name": "Booming Blade",
+    "level": 0,
+    "school": "Evocation",
+    "casting_time": "1 akcja",
+    "range": "Własny (promień 1,5 m)",
+    "components": "S, M (broń do walki wręcz o wartości co najmniej 1 sz)",
+    "duration": "1 runda",
+    "desc": "Wykonujesz atak wręcz bronią używaną do rzucenia czaru. Przy trafieniu cel zostaje otoczony energią; jeśli przed początkiem twojej następnej tury dobrowolnie się przemieści, otrzymuje obrażenia od gromu. Obrażenia rosną na poziomach 5., 11. i 17.",
+    "classes": ["artificer", "sorcerer", "warlock", "wizard"],
+}
+SPELLS["cantrip"].append(BOOMING_BLADE)
+SPELLS["cantrip"].sort(key=lambda spell: spell["name_pl"])
+SPELLS_BY_ID[BOOMING_BLADE["id"]] = BOOMING_BLADE
+
 def get_spell_by_id(spell_id: str) -> Optional[Dict[str, Any]]:
     """Lookup spell by its ID or old English alias."""
     if not spell_id:

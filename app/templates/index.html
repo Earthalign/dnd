@@ -42,7 +42,17 @@
                     class="inline-flex items-center gap-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/50 text-emerald-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
                     🎲 Losuj całą postać
                 </button>
+                <button type="button" onclick="document.getElementById('character-import-file').click()"
+                    class="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Wczytaj kartę (JSON)
+                </button>
+                <input type="file" id="character-import-file" accept=".json,application/json" class="hidden" onchange="importCharacterFile(this)">
+                <button type="button" onclick="exportCharacterFile()"
+                    class="inline-flex items-center gap-2 bg-amber-950 hover:bg-amber-900 border border-amber-700/50 text-amber-200 text-xs font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Zapisz kartę (JSON)
+                </button>
             </div>
+            <p id="character-file-status" class="text-xs text-gray-500 mt-2" role="status" aria-live="polite"></p>
         </header>
 
         <form action="/generate-pdf" method="POST" id="char-creator-form" class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
@@ -50,6 +60,10 @@
             <input type="hidden" id="asi_slots_json" name="asi_slots_json" value="">
             <input type="hidden" id="racial_asi_json" name="racial_asi_json" value="">
             <input type="hidden" id="human_variant_feat_hidden" name="human_variant_feat" value="">
+            <input type="hidden" id="equipment_mode" name="equipment_mode" value="package">
+            <input type="hidden" id="starting_gold_gp" name="starting_gold_gp" value="0">
+            <input type="hidden" id="purchased_items_json" name="purchased_items_json" value="{}">
+            <input type="hidden" id="equipped_armor" name="equipped_armor" value="none">
 
             <!-- COLUMN 1: IDENTITY -->
             <!-- COLUMN 1: IDENTITY (narrower) -->
@@ -248,8 +262,9 @@
                             <div class="flex flex-col items-center">
                                 <span class="text-[9px] text-gray-500 uppercase tracking-widest font-semibold"
                                     data-i18n="lbl_base">Bazowa</span>
-                                <input type="number" id="{{ key }}" name="{{ key }}" value="10" readonly
-                                    class="w-10 bg-transparent text-center text-sm lg:text-base font-bold text-gray-300 focus:outline-none border-none pointer-events-none">
+                                <input type="number" id="{{ key }}" name="{{ key }}" value="10" min="3" max="18" step="1" readonly
+                                    onchange="setCustomStatValue('{{ pyKey }}', this.value)"
+                                    class="w-12 bg-transparent text-center text-sm lg:text-base font-bold text-gray-300 focus:outline-none border border-transparent rounded px-1">
                             </div>
                             <button type="button" id="{{ pyKey }}-btn-inc" onclick="changeStat('{{ pyKey }}', 1)"
                                 class="btn-rpg-stat w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg shrink-0">+</button>
@@ -280,6 +295,13 @@
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+
+                <div class="border-t border-gray-800 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <p class="text-xs text-gray-500" data-i18n="custom_scores_desc">Wprowadź sześć wyników z własnych rzutów (zakres 3–18).</p>
+                    <button type="button" id="custom-scores-toggle" onclick="toggleCustomScoresMode()"
+                        class="text-xs text-amber-500/80 hover:text-amber-300 transition-colors sm:shrink-0 text-left"
+                        data-i18n="custom_scores_enable">Wpisz własne wyniki</button>
                 </div>
             </div>
 
@@ -346,6 +368,16 @@
                     </div>
                 </div>
 
+                <div id="warlock-options-section" class="hidden bg-rose-950/10 border border-rose-500/20 rounded-xl p-4 mt-2">
+                    <h3 class="text-sm font-bold text-rose-300 font-serif">Pakt i Mroczne Inwokacje</h3>
+                    <div id="warlock-pact-boon-container" class="hidden mt-3">
+                        <label class="block text-xs text-gray-400 mb-1">Dar Paktu (od 3. poziomu)</label>
+                        <select id="warlock-pact-boon" name="warlock_pact_boon" onchange="setWarlockPactBoon(this.value)" class="w-full input-rpg rounded-lg px-2 py-2 text-white text-xs"></select>
+                    </div>
+                    <p id="warlock-invocations-count" class="text-xs text-gray-400 mt-3"></p>
+                    <div id="warlock-invocations-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2"></div>
+                </div>
+
                 <!-- Skill limits / Selection helper banner -->
                 <div id="skill-selection-banner"
                     class="bg-gray-950/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-gray-300">
@@ -406,8 +438,19 @@
                         <p class="text-xs text-gray-400 mt-1">Wybierz jeden pakiet ekwipunku startowego odpowiedni dla
                             swojej klasy. Każdy pakiet zawiera broń i opcjonalną zbroję.</p>
                     </div>
+                    <div class="flex flex-wrap gap-2 border-b border-gray-800 pb-3">
+                        <button type="button" id="equipment-mode-package" onclick="setEquipmentMode('package')"
+                            class="px-3 py-2 text-xs font-bold rounded border border-amber-700/50 text-amber-200"
+                            data-i18n="equipment_mode_package">Pakiety startowe</button>
+                        <button type="button" id="equipment-mode-gold" onclick="setEquipmentMode('starting_gold')"
+                            class="px-3 py-2 text-xs font-bold rounded border border-gray-700 text-gray-400 hover:text-amber-200"
+                            data-i18n="equipment_mode_gold">Rzuć złoto i kupuj</button>
+                    </div>
                     <div id="equipment-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <!-- Loaded by JS -->
+                    </div>
+                    <div id="equipment-shop" class="hidden space-y-4">
+                        <!-- Starting gold and shop rendered by JS -->
                     </div>
                 </div>
                 
@@ -518,6 +561,8 @@
         window.CLASS_EQUIPMENT = {{ class_equipment | tojson }};
         window.WEAPONS = {{ weapons | tojson }};
         window.ARMORS = {{ armors | tojson }};
+        window.SHOP_ITEMS = {{ shop_items | tojson }};
+        window.STARTING_GOLD_RULES = {{ starting_gold_rules | tojson }};
         window.WILD_SHAPE_FORMS = {{ wild_shape_forms | tojson }};
         window.ELEMENTAL_FORMS = {{ elemental_forms | tojson }};
     </script>

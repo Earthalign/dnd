@@ -10,8 +10,8 @@ from app.core.rules import (
     POINT_BUY_COSTS, POINT_BUY_TOTAL, POINT_BUY_MIN, POINT_BUY_MAX,
     STANDARD_ARRAY, CLASS_STAT_PRIORITY, PROFICIENCY_BY_LEVEL
 )
-from app.core.progression import CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS, THIRD_CASTER_SLOTS, WARLOCK_SLOTS, SUBCLASSES, CLASS_FEATURES, SUBCLASS_LEVEL, ARTIFICER_SLOTS
-from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS
+from app.core.progression import CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS, THIRD_CASTER_SLOTS, WARLOCK_SLOTS, SUBCLASSES, CLASS_FEATURES, SUBCLASS_LEVEL, ARTIFICER_SLOTS, WARLOCK_INVOCATIONS, WARLOCK_INVOCATION_COUNTS
+from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS, SHOP_ITEMS, STARTING_GOLD_RULES
 from app.schemas.character import CharacterCreateSchema
 
 
@@ -157,6 +157,48 @@ def validate_point_buy(stats: Dict[str, int]) -> Tuple[bool, str]:
     return True, "OK"
 
 
+def validate_custom_stats(stats: Dict[str, int]) -> Tuple[bool, str]:
+    """Validate manually entered rolled ability scores."""
+    for stat, val in stats.items():
+        if not 3 <= val <= 18:
+            return False, f"{STAT_NAMES.get(stat, stat)}: wartość musi mieścić się w zakresie 3-18"
+    return True, "OK"
+
+
+def validate_starting_gold_purchases(char_class: str, gold_gp: int, purchases_json: str, equipped_armor: str):
+    """Validate a class starting-gold roll and its purchased equipment."""
+    rule = STARTING_GOLD_RULES.get(char_class)
+    if not rule or gold_gp <= 0:
+        raise ValueError("Wykonaj rzut na złoto startowe dla wybranej klasy.")
+    dice_total = gold_gp // rule["multiplier"]
+    if gold_gp % rule["multiplier"] or not rule["dice"] <= dice_total <= rule["dice"] * 4:
+        raise ValueError("Wynik złota nie pasuje do wzoru startowego tej klasy.")
+
+    try:
+        purchases = json.loads(purchases_json or "{}")
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("Nieprawidłowy koszyk zakupów.") from exc
+    if not isinstance(purchases, dict):
+        raise ValueError("Nieprawidłowy koszyk zakupów.")
+
+    total_cost_cp = 0
+    clean_purchases = {}
+    for item_id, quantity in purchases.items():
+        if item_id not in SHOP_ITEMS or type(quantity) is not int or not 1 <= quantity <= 99:
+            raise ValueError("Koszyk zawiera nieprawidłowy przedmiot lub ilość.")
+        clean_purchases[item_id] = quantity
+        total_cost_cp += SHOP_ITEMS[item_id]["price_cp"] * quantity
+    if total_cost_cp > gold_gp * 100:
+        raise ValueError("Koszt zakupów przekracza dostępne złoto.")
+
+    if equipped_armor != "none":
+        if equipped_armor not in SHOP_ITEMS or SHOP_ITEMS[equipped_armor]["kind"] != "armor":
+            raise ValueError("Wybrano nieprawidłową zbroję.")
+        if clean_purchases.get(equipped_armor, 0) < 1:
+            raise ValueError("Możesz założyć tylko kupioną zbroję.")
+    return clean_purchases, total_cost_cp, gold_gp * 100 - total_cost_cp
+
+
 def get_skill_bonus(skill_key: str, stats: Dict[str, int], proficiencies: List[str], expertise: List[str], level: int) -> int:
     """Calculate total skill bonus."""
     skill = SKILLS.get(skill_key, {})
@@ -204,6 +246,20 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
             raise ValueError("Wybrana podklasa nie pasuje do klasy.")
         if level < SUBCLASS_LEVEL.get(char_class, 3):
             raise ValueError("Podklasa nie jest jeszcze dostępna na tym poziomie.")
+
+    if data.equipment_mode not in {"package", "starting_gold"}:
+        raise ValueError("Nieprawidłowy sposób wyboru ekwipunku.")
+    if data.equipment_mode == "package":
+        package_ids = {package["id"] for package in CLASS_EQUIPMENT.get(char_class, {}).get("options", [])}
+        if data.equipment_package and data.equipment_package not in package_ids:
+            raise ValueError("Wybierz prawidłowy pakiet ekwipunku dla klasy.")
+    purchased_items = {}
+    purchase_total_cp = 0
+    remaining_gold_cp = 0
+    if data.equipment_mode == "starting_gold":
+        purchased_items, purchase_total_cp, remaining_gold_cp = validate_starting_gold_purchases(
+            char_class, data.starting_gold_gp, data.purchased_items_json, data.equipped_armor
+        )
 
     # Base stats (from Point Buy/Standard Array, 8-15)
     base_stats = {
@@ -259,6 +315,11 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     class_choices = class_data.get("skill_choices", [])
     allowed_class_skills = set(SKILLS) if class_choices == "all" else set(class_choices)
     allowed_skills = allowed_class_skills | set(bg_data.get("skills", []))
+    custom_background_skills = set(data.custom_background_skills)
+    if background == "custom":
+        if len(custom_background_skills) != 2 or not custom_background_skills.issubset(SKILLS):
+            raise ValueError("Niestandardowe pochodzenie wymaga wyboru dokładnie dwóch różnych biegłości.")
+        allowed_skills |= custom_background_skills
     if race == "human_variant":
         allowed_skills |= set(SKILLS)
     if any(skill not in SKILLS or skill not in allowed_skills for skill in data.skills):
@@ -270,9 +331,37 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
 
     # Proficiencies
     saving_throw_profs = class_data.get("saving_throws", [])
-    skill_profs = data.skills
+    skill_profs = sorted(set(data.skills) | custom_background_skills | set(race_data.get("skill_proficiencies", [])))
     expertise = data.expertise
     feats = data.feats
+
+    if char_class == "warlock":
+        valid_pacts = {"", "chain", "blade", "tome"}
+        if data.warlock_pact_boon not in valid_pacts:
+            raise ValueError("Wybrano nieprawidłowy Dar Paktu.")
+        if level >= 3 and not data.warlock_pact_boon:
+            raise ValueError("Wybierz Dar Paktu dostępny od 3. poziomu.")
+        if level < 3 and data.warlock_pact_boon:
+            raise ValueError("Dar Paktu jest dostępny od 3. poziomu.")
+        expected_invocations = 0
+        for required_level, count in WARLOCK_INVOCATION_COUNTS.items():
+            if level >= required_level:
+                expected_invocations = count
+        if len(data.invocations) != expected_invocations or len(set(data.invocations)) != len(data.invocations):
+            raise ValueError(f"Wybierz dokładnie {expected_invocations} Mroczne Inwokacje dla swojego poziomu.")
+        selected_cantrips = set(data.selected_cantrips)
+        for invocation_key in data.invocations:
+            invocation = WARLOCK_INVOCATIONS.get(invocation_key)
+            if not invocation:
+                raise ValueError("Wybrano nieprawidłową Mroczną Inwokację.")
+            if invocation.get("requires_level", 0) > level:
+                raise ValueError(f"Inwokacja {invocation['name']} wymaga poziomu {invocation['requires_level']}.")
+            if invocation.get("requires_pact") and invocation["requires_pact"] != data.warlock_pact_boon:
+                raise ValueError(f"Inwokacja {invocation['name']} wymaga odpowiedniego Daru Paktu.")
+            if invocation.get("requires_cantrip") and not selected_cantrips.intersection({"eldritch_blast", "nieziemskie_uderzenie"}):
+                raise ValueError(f"Inwokacja {invocation['name']} wymaga Mistycznego Uderzenia.")
+    elif data.invocations or data.warlock_pact_boon:
+        raise ValueError("Dary Paktu i Mroczne Inwokacje są dostępne tylko dla czarnoksiężnika.")
 
     # Modifiers
     mods = {stat: get_modifier(val) for stat, val in raw_stats.items()}
@@ -287,8 +376,33 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     perception_prof = 1 if "postrzeganie" in skill_profs else 0
     passive_perception = 10 + mods["wis"] + (prof_bonus if perception_prof else 0)
 
-    # AC — consider selected equipment package armor
-    if char_class == "barbarian":
+    # AC — use either the selected class package or purchased armor.
+    if data.equipment_mode == "starting_gold":
+        armor_key = data.equipped_armor
+        armor_ac_map = {
+            "none": 10 + mods["dex"],
+            "padded": 11 + mods["dex"],
+            "leather": 11 + mods["dex"],
+            "studded_leather": 12 + mods["dex"],
+            "hide": 12 + min(mods["dex"], 2),
+            "chain_shirt": 13 + min(mods["dex"], 2),
+            "scale_mail": 14 + min(mods["dex"], 2),
+            "breastplate": 14 + min(mods["dex"], 2),
+            "half_plate": 15 + min(mods["dex"], 2),
+            "ring_mail": 14,
+            "chain_mail": 16,
+            "splint": 17,
+            "plate": 18,
+        }
+        if armor_key == "none" and char_class == "barbarian":
+            ac = 10 + mods["dex"] + mods["con"]
+        elif armor_key == "none" and char_class == "monk":
+            ac = 10 + mods["dex"] + mods["wis"]
+        else:
+            ac = armor_ac_map[armor_key]
+        if purchased_items.get("shield", 0):
+            ac += 2
+    elif char_class == "barbarian":
         ac = 10 + mods["dex"] + mods["con"]
     elif char_class == "monk":
         ac = 10 + mods["dex"] + mods["wis"]
@@ -339,6 +453,15 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     for lvl in range(1, level + 1):
         if lvl in features_dict:
             class_features.extend(features_dict[lvl])
+
+    if char_class == "warlock" and data.warlock_pact_boon:
+        pact_names = {"chain": "Pakt Łańcucha", "blade": "Pakt Ostrza", "tome": "Pakt Księgi"}
+        class_features.append(f"Dar Paktu: {pact_names[data.warlock_pact_boon]}.")
+    if char_class == "warlock":
+        class_features.extend(
+            f"Mroczna Inwokacja — {WARLOCK_INVOCATIONS[key]['name']}: {WARLOCK_INVOCATIONS[key]['description']}"
+            for key in data.invocations
+        )
             
     # Add subclass features/name
     subclass_name = ""
@@ -379,10 +502,26 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         slots_list = ARTIFICER_SLOTS.get(level, [0] * 5)
         spell_slots = {i + 1: slots_list[i] for i in range(5) if slots_list[i] > 0}
 
-    # Build equipment info string — class package + background items
+    # Build equipment info string from the selected package or purchased items.
     equipment_info = ""
-    eq_pkg = data.equipment_package
-    if eq_pkg:
+    if data.equipment_mode == "starting_gold":
+        equipment_info = ", ".join(
+            f"{SHOP_ITEMS[item_id]['name']} x{quantity}"
+            for item_id, quantity in purchased_items.items()
+        )
+        remaining_gp, remaining_cp = divmod(remaining_gold_cp, 100)
+        remaining_sp, remaining_cp = divmod(remaining_cp, 10)
+        coin_parts = []
+        if remaining_gp:
+            coin_parts.append(f"{remaining_gp} sz")
+        if remaining_sp:
+            coin_parts.append(f"{remaining_sp} ss")
+        if remaining_cp:
+            coin_parts.append(f"{remaining_cp} sm")
+        remaining_text = ", ".join(coin_parts) or "0 sz"
+        equipment_info = f"{equipment_info} | Pozostałe złoto: {remaining_text}" if equipment_info else f"Pozostałe złoto: {remaining_text}"
+    elif data.equipment_package:
+        eq_pkg = data.equipment_package
         pkg_options = CLASS_EQUIPMENT.get(char_class, {}).get("options", [])
         for pkg in pkg_options:
             if pkg["id"] == eq_pkg:
@@ -398,6 +537,50 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         equipment_info = (equipment_info + " | " + bg_eq_str).strip(" | ") if equipment_info else bg_eq_str
     if data.equipment:
         equipment_info = (equipment_info + " | " + data.equipment).strip(" | ") if equipment_info else data.equipment
+
+    selected_weapon_ids = []
+    if data.equipment_mode == "starting_gold":
+        for item_id, quantity in purchased_items.items():
+            item = SHOP_ITEMS[item_id]
+            if item.get("kind") == "weapon":
+                selected_weapon_ids.extend([item_id] * quantity)
+    elif data.equipment_package:
+        for package in CLASS_EQUIPMENT.get(char_class, {}).get("options", []):
+            if package["id"] == data.equipment_package:
+                selected_weapon_ids.extend(package.get("weapons", []))
+                break
+
+    weapon_proficiencies = list(class_data.get("weapon_proficiencies", []))
+    if char_class == "warlock" and subclass_key == "hexblade":
+        weapon_proficiencies.append("bojowa")
+    attack_lines = []
+    for weapon_id in dict.fromkeys(selected_weapon_ids):
+        weapon = WEAPONS.get(weapon_id)
+        item = SHOP_ITEMS.get(weapon_id, {})
+        name = weapon.get("name", item.get("name", weapon_id)) if weapon else item.get("name", weapon_id)
+        quantity = selected_weapon_ids.count(weapon_id)
+        label = f"{name}" + (f" x{quantity}" if quantity > 1 else "")
+        if weapon:
+            properties = weapon.get("props", "")
+            weapon_range = weapon.get("range", "")
+            if "Finezja" in properties:
+                ability_mod = max(mods["str"], mods["dex"])
+            elif "dystans" in weapon_range and "wręcz" not in weapon_range:
+                ability_mod = mods["dex"]
+            else:
+                ability_mod = mods["str"]
+            is_proficient = bool(set(weapon.get("profs", [])) & set(weapon_proficiencies))
+            attack_bonus = ability_mod + (prof_bonus if is_proficient else 0)
+            damage_bonus = f"{ability_mod:+d}" if ability_mod else ""
+            damage = f"{weapon['damage']}{damage_bonus} {weapon['type']}"
+            line = f"{label}: atak {attack_bonus:+d}, obrażenia {damage}"
+            if weapon.get("props"):
+                line += f" ({properties})"
+        else:
+            line = f"{label}: {item.get('description', 'broń')}"
+        attack_lines.append(line)
+    manual_attacks = data.attacks.strip()
+    attacks_info = "\n".join(part for part in [manual_attacks, "BROŃ:\n" + "\n".join(attack_lines) if attack_lines else ""] if part)
 
     return {
         "name": name,
@@ -427,8 +610,8 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         "traits": race_data.get("traits", []),
         "class_features": class_features,
         "languages": race_data.get("languages", ["Wspólny"]),
-        "armor_profs": class_data.get("armor_proficiencies", []),
-        "weapon_profs": class_data.get("weapon_proficiencies", []),
+        "armor_profs": list(class_data.get("armor_proficiencies", [])) + (["średnia", "tarcze"] if char_class == "warlock" and subclass_key == "hexblade" else []),
+        "weapon_profs": list(class_data.get("weapon_proficiencies", [])) + (["bojowa"] if char_class == "warlock" and subclass_key == "hexblade" else []),
         "hit_die": class_data.get("hit_die", 8),
         "spellcasting": class_data.get("spellcasting", False) or caster_type != "none",
         "spellcasting_stat": class_data.get("spellcasting_stat") or ("int" if caster_type == "third" else None),
@@ -446,6 +629,6 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
         "skin": data.skin,
         "hair": data.hair,
         "equipment": equipment_info,
-        "attacks": data.attacks,
+        "attacks": attacks_info,
         "asi_feats": asi_feats,
     }

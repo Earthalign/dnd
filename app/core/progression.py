@@ -551,6 +551,22 @@ SUBCLASSES = {
                 14: ["Zniewalanie: Nakładasz magiczną kontrolę we władanie nieświadomego lub obezwładnionego humanoida do puki inny Ci go nie rozproszy."]
             }
         },
+        "hexblade": {
+            "name": "Hexblade",
+            "name_en": "Hexblade",
+            "description": "Zawarłeś pakt z tajemniczą siłą Shadowfell, która objawia się w świadomych, magicznych broniach. Niektórzy przypisują jej początek Królowej Kruków.",
+            "description_en": "You made a pact with a mysterious Shadowfell force manifesting in sentient magic weapons; some sages connect it to the Raven Queen.",
+            "features": {
+                1: [
+                    "Rozszerzona lista zaklęć: tarcza, gniewne uderzenie; rozmycie, piętnujące uderzenie; migotanie, broń żywiołów; widmowy zabójca, oszałamiające uderzenie; wygnające uderzenie, stożek zimna.",
+                    "Klątwa Hexblade'a: akcją dodatkową przeklinasz widoczną istotę w zasięgu 9 m na 1 minutę; dodajesz premię z biegłości do obrażeń, trafiasz krytycznie na 19–20, a po jej śmierci odzyskujesz PW równe poziomowi czarnoksiężnika + modyfikator Charyzmy. Odnawia się po krótkim lub długim odpoczynku.",
+                    "Wojownik Hexblade'a: biegłość w średnich zbrojach, tarczach i broniach wojennych. Po długim odpoczynku możesz wybrać jedną biegłą broń bez właściwości dwuręcznej i używać Charyzmy do ataku oraz obrażeń; przy Pakcie Ostrza dotyczy to każdej broni paktu.",
+                ],
+                6: ["Widmowy Sługa: po zabiciu humanoida możesz raz na długi odpoczynek przyzwać jego widmo z PW tymczasowymi równymi połowie poziomu czarnoksiężnika; służy do następnego długiego odpoczynku."],
+                10: ["Pancerz Klątw: gdy przeklęty przeciwnik trafi cię atakiem, rzuć k6; wynik 4 lub wyższy zmienia trafienie w pudło."],
+                14: ["Mistrz Klątw: gdy przeklęta istota umrze, możesz przenieść klątwę na inną widoczną istotę w zasięgu 9 m; nie odzyskujesz wtedy PW."],
+            },
+        },
     },
     "wizard": {
         "abjuration": {
@@ -662,6 +678,66 @@ ASI_LEVELS = {
 }
 
 # ─── Class Features by Level (key features only) ───
+WARLOCK_INVOCATIONS = {
+    "agonizing_blast": {"name": "Agonizing Blast", "description": "Dodajesz modyfikator Charyzmy do obrażeń trafieniem Mistycznym Uderzeniem.", "requires_cantrip": "eldritch_blast"},
+    "armor_of_shadows": {"name": "Armor of Shadows", "description": "Możesz rzucić Zbroję Maga na siebie bez wydawania miejsca na czar."},
+    "ascendant_step": {"name": "Ascendant Step", "description": "Możesz rzucać Lewitację na siebie bez ograniczeń.", "requires_level": 9},
+    "beast_speech": {"name": "Beast Speech", "description": "Możesz bez ograniczeń rzucać Rozmowę ze zwierzętami."},
+    "beguiling_influence": {"name": "Beguiling Influence", "description": "Zyskujesz biegłość w Oszustwie i Perswazji."},
+    "bewitching_whispers": {"name": "Bewitching Whispers", "description": "Możesz raz rzucić Przymus, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku.", "requires_level": 7},
+    "book_of_ancient_secrets": {"name": "Book of Ancient Secrets", "description": "Pakt Księgi: zdobywasz rytuały i możesz przepisywać kolejne rytualne zaklęcia.", "requires_pact": "tome"},
+    "chains_of_carceri": {"name": "Chains of Carceri", "description": "Możesz bez ograniczeń rzucać Unieruchomienie Potwora na niebiańskie istoty, demony i żywiołaki.", "requires_level": 15, "requires_pact": "chain"},
+    "devils_sight": {"name": "Devil's Sight", "description": "Widzisz normalnie w ciemności, także magicznej, do 36 m."},
+    "dreadful_word": {"name": "Dreadful Word", "description": "Możesz raz rzucić Zamęt, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku.", "requires_level": 7},
+    "eldritch_sight": {"name": "Eldritch Sight", "description": "Możesz bez ograniczeń rzucać Wykrycie Magii."},
+    "eldritch_spear": {"name": "Eldritch Spear", "description": "Zasięg Mistycznego Uderzenia wzrasta do 300 m.", "requires_cantrip": "eldritch_blast"},
+    "eyes_of_the_rune_keeper": {"name": "Eyes of the Rune Keeper", "description": "Możesz odczytać każde pismo."},
+    "fiendish_vigor": {"name": "Fiendish Vigor", "description": "Możesz bez ograniczeń rzucać na siebie Życie wampiryczne na 1. poziomie."},
+    "gaze_of_two_minds": {"name": "Gaze of Two Minds", "description": "Dotykając chętnej istoty, możesz postrzegać przez jej zmysły, dopóki pozostajesz na tym samym planie."},
+    "lifedrinker": {"name": "Lifedrinker", "description": "Pakt Ostrza: twoja broń paktu zadaje dodatkowe obrażenia nekrotyczne równe modyfikatorowi Charyzmy.", "requires_level": 12, "requires_pact": "blade"},
+    "mask_of_many_faces": {"name": "Mask of Many Faces", "description": "Możesz bez ograniczeń rzucać Przebranie Siebie."},
+    "master_of_myriad_forms": {"name": "Master of Myriad Forms", "description": "Możesz bez ograniczeń rzucać Przemianę Siebie.", "requires_level": 15},
+    "minions_of_chaos": {"name": "Minions of Chaos", "description": "Możesz raz rzucić Przywołanie Żywiołaka, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku.", "requires_level": 9},
+    "mire_the_mind": {"name": "Mire the Mind", "description": "Możesz raz rzucić Powolność, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku.", "requires_level": 5},
+    "misty_visions": {"name": "Misty Visions", "description": "Możesz bez ograniczeń rzucać Cichą Iluzję."},
+    "one_with_shadows": {"name": "One with Shadows", "description": "W słabym świetle lub ciemności możesz stać się niewidzialny, gdy stoisz nieruchomo.", "requires_level": 5},
+    "otherworldly_leap": {"name": "Otherworldly Leap", "description": "Możesz bez ograniczeń rzucać Skok na siebie.", "requires_level": 9},
+    "repelling_blast": {"name": "Repelling Blast", "description": "Trafienie Mistycznym Uderzeniem może odsunąć cel o 3 m.", "requires_cantrip": "eldritch_blast"},
+    "sculptor_of_flesh": {"name": "Sculptor of Flesh", "description": "Możesz raz rzucić Polimorfię, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku.", "requires_level": 7},
+    "sign_of_ill_omen": {"name": "Sign of Ill Omen", "description": "Możesz raz rzucić Klątwę, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku.", "requires_level": 5},
+    "thirsting_blade": {"name": "Thirsting Blade", "description": "Atakując bronią paktu w swojej turze, atakujesz nią dwa razy.", "requires_level": 5, "requires_pact": "blade"},
+    "thief_of_five_fates": {"name": "Thief of Five Fates", "description": "Możesz raz rzucić Zgubę, używając miejsca na czar czarnoksiężnika; odzyskujesz tę możliwość po długim odpoczynku."},
+    "visions_of_distant_realms": {"name": "Visions of Distant Realms", "description": "Możesz bez ograniczeń rzucać Okiem Arkanum.", "requires_level": 15},
+    "voice_of_the_chain_master": {"name": "Voice of the Chain Master", "description": "Pakt Łańcucha: możesz komunikować się telepatycznie i postrzegać przez zmysły chowańca.", "requires_pact": "chain"},
+    "whispers_of_the_grave": {"name": "Whispers of the Grave", "description": "Możesz bez ograniczeń rzucać Rozmowę ze Zmarłymi.", "requires_level": 9},
+    "witch_sight": {"name": "Witch Sight", "description": "Widzisz prawdziwą postać zmiennokształtnych i istot ukrytych przez iluzję w zasięgu 9 m.", "requires_level": 15},
+}
+
+WARLOCK_INVOCATION_COUNTS = {2: 2, 5: 3, 7: 4, 9: 5, 12: 6, 15: 7, 18: 8}
+
+HEXBLADE_EXPANDED_SPELLS = {
+    1: [
+        {"id": "tarcza", "aliases": ["tarcza_cieniostrze"], "name_pl": "Tarcza", "name_en": "Shield"},
+        {"id": "hexblade_wrathful_smite", "aliases": ["gniewne_ugodzenie_cieniostrze"], "name_pl": "Gniewne Uderzenie", "name_en": "Wrathful Smite"},
+    ],
+    2: [
+        {"id": "rozmycie", "aliases": ["rozmycie_cieniostrze"], "name_pl": "Rozmycie", "name_en": "Blur"},
+        {"id": "hexblade_branding_smite", "aliases": ["pietnujace_ugodzenie_cieniostrze"], "name_pl": "Piętnujące Uderzenie", "name_en": "Branding Smite"},
+    ],
+    3: [
+        {"id": "hexblade_blink", "aliases": ["migniecie_cieniostrze"], "name_pl": "Migotanie", "name_en": "Blink"},
+        {"id": "hexblade_elemental_weapon", "aliases": ["bron_zywiolu_cieniostrze"], "name_pl": "Broń Żywiołów", "name_en": "Elemental Weapon"},
+    ],
+    4: [
+        {"id": "hexblade_phantasmal_killer", "aliases": ["urojony_zabojca_cieniostrze"], "name_pl": "Widmowy Zabójca", "name_en": "Phantasmal Killer"},
+        {"id": "hexblade_staggering_smite", "aliases": ["wstrzasajace_ugodzenie_cieniostrze"], "name_pl": "Oszałamiające Uderzenie", "name_en": "Staggering Smite"},
+    ],
+    5: [
+        {"id": "hexblade_banishing_smite", "aliases": ["wypedzajace_ugodzenie_cieniostrze"], "name_pl": "Wygnające Uderzenie", "name_en": "Banishing Smite"},
+        {"id": "stozek_zimna", "aliases": ["stozek_zimna_cieniostrze"], "name_pl": "Stożek Zimna", "name_en": "Cone of Cold"},
+    ],
+}
+
 CLASS_FEATURES = {
     "artificer": {
         1: ["Magiczne Majsterkowanie", "Rzucanie Zaklęć"],

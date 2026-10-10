@@ -17,7 +17,10 @@ class CharacterCreateSchema(BaseModel):
     charisma: int = 10
     stat_mode: str = "point_buy"
     skills: List[str] = Field(default_factory=list)
+    custom_background_skills: List[str] = Field(default_factory=list)
     expertise: List[str] = Field(default_factory=list)
+    invocations: List[str] = Field(default_factory=list)
+    warlock_pact_boon: str = ""
     feats: List[str] = Field(default_factory=list)
     subclass: Optional[str] = None
     selected_cantrips: List[str] = Field(default_factory=list)
@@ -46,6 +49,10 @@ class CharacterCreateSchema(BaseModel):
     attacks: str = ""
     player: str = ""
     equipment_package: str = ""
+    equipment_mode: str = "package"
+    starting_gold_gp: int = 0
+    purchased_items_json: str = ""
+    equipped_armor: str = "none"
     asi_slots_json: str = ""  # JSON string of ASI slots
     racial_asi_json: str = ""  # JSON string of custom racial ability score increases
     human_variant_feat: str = ""
@@ -69,7 +76,10 @@ class CharacterCreateSchema(BaseModel):
             charisma=int(form.get("charisma", 10)),
             stat_mode=str(form.get("stat_mode", "point_buy")),
             skills=form.getlist("skills"),
+            custom_background_skills=form.getlist("custom_background_skills"),
             expertise=form.getlist("expertise"),
+            invocations=form.getlist("invocations"),
+            warlock_pact_boon=str(form.get("warlock_pact_boon", "")),
             feats=form.getlist("feats"),
             subclass=form.get("subclass", None) if form.get("subclass", "") != "" else None,
             selected_cantrips=form.getlist("selected_cantrips"),
@@ -98,6 +108,10 @@ class CharacterCreateSchema(BaseModel):
             attacks=str(form.get("attacks", "")),
             player=str(form.get("player", "")),
             equipment_package=str(form.get("equipment_package", "")),
+            equipment_mode=str(form.get("equipment_mode", "package")),
+            starting_gold_gp=int(form.get("starting_gold_gp", 0)),
+            purchased_items_json=str(form.get("purchased_items_json", "")),
+            equipped_armor=str(form.get("equipped_armor", "none")),
             asi_slots_json=str(form.get("asi_slots_json", "")),
             racial_asi_json=str(form.get("racial_asi_json", "")),
             human_variant_feat=str(form.get("human_variant_feat", "")),

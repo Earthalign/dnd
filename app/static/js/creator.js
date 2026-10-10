@@ -69,13 +69,22 @@ const state = {
         cha: 10
     },
     skillsSelected: new Set(),
+    customBackgroundSkills: new Set(),
     expertiseSelected: new Set(),
+    invocationsSelected: new Set(),
+    warlockPactBoon: '',
     // ASI slots: each slot = { type: 'feat'|'+2'|'+1+1', feat: '', stat1: '', stat2: '' }
     asiSlots: [],
     statMode: 'point_buy',
     selectedCantrips: new Set(),
     // Selected equipment package id
     selectedEquipment: null,
+    equipmentMode: 'package',
+    startingGoldGp: 0,
+    goldRollClass: null,
+    goldRollDice: [],
+    purchasedItems: {},
+    equippedArmor: 'none',
     // Human Variant: free feat at lv1
     humanVariantFeat: '',
     customRacialAsiEnabled: false,
@@ -242,14 +251,15 @@ function validateLevelUpStats() {
 }
 
 function getBackgroundSkills(bgKey) {
+    if (bgKey === 'custom') return Array.from(state.customBackgroundSkills);
     const bg = BACKGROUNDS[bgKey];
     return bg ? bg.skills : [];
 }
 
 function getRaceSkills(raceKey) {
-    const skills = [];
+    const skills = [...(RACES[raceKey]?.skill_proficiencies || [])];
     // In D&D 5e: Wood Elf and High Elf get Keen Senses (Perception proficiency)
-    if (raceKey === 'elf_high' || raceKey === 'elf_wood') {
+    if ((raceKey === 'elf_high' || raceKey === 'elf_wood') && !skills.includes('postrzeganie')) {
         skills.push('postrzeganie');
     }
     // Half-Orc gets Menacing (Intimidation proficiency)
@@ -382,6 +392,14 @@ function toggleSpell(level, spellId, isChecked) {
     updateUI();
 }
 
+function countChosenClassSpells(classKey, subclassKey) {
+    let count = 0;
+    for (let level = 1; level <= 9; level++) {
+        count += state[`selectedSpells${level}`].size;
+    }
+    return count;
+}
+
 function toggleFeat(featKey, isChecked) {
     if (isChecked) {
         state.featsSelected.add(featKey);
@@ -402,6 +420,11 @@ function updateUI() {
         state.customRacialAsi.mode = 'variant_plus_one';
         if (!Array.isArray(state.customRacialAsi.stats) || state.customRacialAsi.stats.length !== 2) {
             state.customRacialAsi.stats = ['str', 'dex'];
+        }
+    } else if (raceKey === 'elf_shadar_kai') {
+        state.customRacialAsiEnabled = true;
+        if (state.customRacialAsi.mode === 'variant_plus_one') {
+            state.customRacialAsi.mode = 'two_plus_one';
         }
     }
     
@@ -441,15 +464,20 @@ function updateUI() {
     // 1. Update description panels
     renderCustomRacialAsi();
     updateDetailsInfo(raceKey, classKey, bgKey, level, subclassKey);
+    renderWarlockOptions(classKey, level);
     
     // 2. Update Stats and Point Buy
     const remainingPoints = calculateRemainingPoints();
     const poolEl = document.getElementById('point-pool');
     const poolTextEl = document.getElementById('point-pool-text');
     
-    poolEl.innerText = remainingPoints;
-    
-    if (remainingPoints === 0) {
+    poolEl.innerText = state.statMode === 'custom' ? '—' : remainingPoints;
+
+    if (state.statMode === 'custom') {
+        poolEl.className = "text-4xl font-black text-gray-400 transition duration-300";
+        poolTextEl.innerText = t('pool_custom') || "Własne wyniki";
+        poolTextEl.className = "text-xs text-gray-500 block";
+    } else if (remainingPoints === 0) {
         poolEl.className = "text-4xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] transition duration-300";
         poolTextEl.innerText = t('pool_spent') || "Wykorzystane!";
         poolTextEl.className = "text-xs text-emerald-400 font-bold block";
@@ -473,7 +501,11 @@ function updateUI() {
         
         // Set input values
         const htmlId = getHtmlInputId(s);
-        document.getElementById(htmlId).value = base;
+        const statInput = document.getElementById(htmlId);
+        statInput.value = base;
+        statInput.readOnly = state.statMode !== 'custom';
+        statInput.classList.toggle('pointer-events-none', state.statMode !== 'custom');
+        statInput.classList.toggle('border-amber-500/40', state.statMode === 'custom');
         
         // Primary stat suitability hint
         const primaryHintEl = document.getElementById(`${s}-primary-hint`);
@@ -513,7 +545,7 @@ function updateUI() {
         }
         
         // Limits
-        if (state.statMode === 'dice') {
+        if (state.statMode !== 'point_buy') {
             document.getElementById(`${s}-btn-dec`).disabled = true;
             document.getElementById(`${s}-btn-inc`).disabled = true;
         } else {
@@ -576,6 +608,29 @@ function updateUI() {
                 }
             }
         }
+    }
+    if (state.equipmentMode === 'starting_gold') {
+        const armorKey = state.equippedArmor;
+        const armorAc = {
+            padded: 11 + dexMod,
+            leather: 11 + dexMod,
+            studded_leather: 12 + dexMod,
+            hide: 12 + Math.min(dexMod, 2),
+            chain_shirt: 13 + Math.min(dexMod, 2),
+            scale_mail: 14 + Math.min(dexMod, 2),
+            breastplate: 14 + Math.min(dexMod, 2),
+            half_plate: 15 + Math.min(dexMod, 2),
+            ring_mail: 14,
+            chain_mail: 16,
+            splint: 17,
+            plate: 18,
+        };
+        if (armorKey !== 'none') acVal = armorAc[armorKey];
+        else if (state.purchasedItems.shield) acVal = 10 + dexMod;
+        else if (classKey === 'barbarian') acVal = 10 + dexMod + conMod;
+        else if (classKey === 'monk') acVal = 10 + dexMod + wisMod;
+        else acVal = 10 + dexMod;
+        if (state.purchasedItems.shield) acVal += 2;
     }
     document.getElementById('ac-preview').innerText = acVal;
     
@@ -925,14 +980,34 @@ function updateUI() {
         }
 
         // Higher level spells
-        let totalSelectedSpells = 0;
-        for (let l = 1; l <= 9; l++) {
-            totalSelectedSpells += state[`selectedSpells${l}`].size;
-        }
+        const totalSelectedSpells = countChosenClassSpells(classKey, subclassKey);
 
         for (let l = 1; l <= limits.max_spell_level; l++) {
-            const allowedSpells = (SPELLS_DATA[`level_${l}`] || []).filter(s => s.classes.includes(spellListClass));
-            
+            const classSpells = (SPELLS_DATA[`level_${l}`] || []).filter(s => s.classes.includes(spellListClass));
+            const expandedHexbladeSpells = classKey === 'warlock' && subclassKey === 'hexblade'
+                ? (PROGRESSION.HEXBLADE_EXPANDED_SPELLS[l] || []).map(spell => ({
+                    ...spell,
+                    classes: ['warlock'],
+                    desc: 'Zaklęcie z rozszerzonej listy patrona Hexblade.',
+                }))
+                : [];
+            const allowedSpells = [];
+            const seenSpellIds = new Set();
+            const seenSpellNames = new Set();
+            [...classSpells, ...expandedHexbladeSpells].forEach(spell => {
+                const normalizedNames = [spell.name_en, spell.name_pl]
+                    .map(name => String(name || '').trim().toLocaleLowerCase())
+                    .filter(Boolean);
+                const overlapsExisting = allowedSpells.some(existing =>
+                    (spell.aliases || []).includes(existing.id) ||
+                    (existing.aliases || []).includes(spell.id)
+                );
+                if (overlapsExisting || seenSpellIds.has(spell.id) || normalizedNames.some(name => seenSpellNames.has(name))) return;
+                seenSpellIds.add(spell.id);
+                normalizedNames.forEach(name => seenSpellNames.add(name));
+                allowedSpells.push(spell);
+            });
+
             // Clean outdated
             state[`selectedSpells${l}`].forEach(spellId => {
                 if (!allowedSpells.some(s => s.id === spellId)) {
@@ -953,7 +1028,7 @@ function updateUI() {
                 
                 allowedSpells.forEach(s => {
                     const isChecked = state[`selectedSpells${l}`].has(s.id);
-                    // For prepared casters or known casters, the limit applies globally across all levels, except cantrips.
+                    // The known-spell limit applies globally across spell levels.
                     const disabledAttr = (!isChecked && totalSelectedSpells >= spellsKnownLimit) ? 'disabled' : '';
                     const name = currentLang === 'en' ? s.name_en : s.name_pl;
                     const checkedClass = isChecked ? 'bg-indigo-950/15 border-indigo-500/35 text-indigo-300 shadow-[0_2px_8px_rgba(99,102,241,0.02)]' : 'bg-gray-900/30 border-gray-850 text-gray-400 hover:border-gray-800';
@@ -988,9 +1063,37 @@ function updateUI() {
     let formIsValid = true;
     let errorMessages = [];
     
-    if (state.statMode !== 'dice' && remainingPoints !== 0) {
+    if (state.statMode === 'point_buy' && remainingPoints !== 0) {
         formIsValid = false;
         errorMessages.push(t('err_points', {n: remainingPoints}) || "Musisz wykorzystać dokładnie 27 punktów w systemie Point Buy (aktualnie pozostało: " + remainingPoints + " pkt).");
+    }
+
+    if (state.statMode === 'custom' && Object.values(state.baseStats).some(score => !Number.isInteger(score) || score < 3 || score > 18)) {
+        formIsValid = false;
+        errorMessages.push(t('err_custom_scores') || 'Każda własna statystyka musi mieścić się w zakresie 3–18.');
+    }
+
+    if (bgKey === 'custom' && state.customBackgroundSkills.size !== 2) {
+        formIsValid = false;
+        errorMessages.push('W niestandardowym pochodzeniu wybierz dokładnie dwie biegłości.');
+    }
+
+    if (state.equipmentMode === 'starting_gold') {
+        const spentCp = calculateShopSpentCp();
+        if (!state.startingGoldGp || state.goldRollClass !== classKey) {
+            formIsValid = false;
+            errorMessages.push('Wykonaj rzut na złoto startowe dla wybranej klasy.');
+        } else if (spentCp > state.startingGoldGp * 100) {
+            formIsValid = false;
+            errorMessages.push('Koszt zakupów przekracza dostępne złoto.');
+        }
+    }
+
+    const customScoresToggle = document.getElementById('custom-scores-toggle');
+    if (customScoresToggle) {
+        customScoresToggle.innerText = state.statMode === 'custom'
+            ? (t('custom_scores_disable') || 'Wróć do Point Buy')
+            : (t('custom_scores_enable') || 'Włącz własne wyniki');
     }
 
     if (state.customRacialAsiEnabled) {
@@ -1037,10 +1140,7 @@ function updateUI() {
             formIsValid = false;
             errorMessages.push(t('err_cantrips', {need: cantripLimit, have: state.selectedCantrips.size}) || `Klasa wymaga wyboru dokładnie ${cantripLimit} sztuczek (wybrano ${state.selectedCantrips.size}).`);
         }
-        let totalSelectedSpells = 0;
-        for (let l = 1; l <= 9; l++) {
-            totalSelectedSpells += state[`selectedSpells${l}`].size;
-        }
+        const totalSelectedSpells = countChosenClassSpells(classKey, subclassKey);
         if (totalSelectedSpells < spellsKnownLimit) {
             formIsValid = false;
             errorMessages.push(t('err_spells1', {need: spellsKnownLimit, have: totalSelectedSpells}) || `Klasa wymaga wyboru dokładnie ${spellsKnownLimit} zaklęć wyższych poziomów (wybrano ${totalSelectedSpells}).`);
@@ -1272,7 +1372,13 @@ function updateDetailsInfo(raceKey, classKey, bgKey, level = 1, subclassKey = nu
         let skillsHtml = bg.skills.map(s => 
             `<span class="text-[9px] font-bold bg-purple-500/10 border border-purple-500/25 text-purple-400 px-2 py-0.5 rounded">${SKILLS[s] ? SKILLS[s].name : s}</span>`
         ).join(' ');
-        
+        if (bgKey === 'custom') {
+            skillsHtml = Object.keys(SKILLS).sort((a, b) => SKILLS[a].name.localeCompare(SKILLS[b].name)).map(skillKey => {
+                const checked = state.customBackgroundSkills.has(skillKey);
+                const disabled = !checked && state.customBackgroundSkills.size >= 2;
+                return `<label class="inline-flex items-center gap-1.5 text-[10px] text-gray-300 border border-gray-800 rounded px-2 py-1"><input type="checkbox" name="custom_background_skills" value="${skillKey}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleCustomBackgroundSkill('${skillKey}', this.checked)" class="accent-amber-500">${SKILLS[skillKey].name}</label>`;
+            }).join('');
+        }
         document.getElementById('bg-details-card').innerHTML = `
             <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-gray-850 pb-1.5">
@@ -1307,6 +1413,24 @@ function changeStat(statAbbr, amount) {
     }
 }
 
+function toggleCustomScoresMode() {
+    if (state.statMode === 'custom') {
+        resetToPointBuy();
+        return;
+    }
+    state.statMode = 'custom';
+    document.getElementById('stat_mode').value = 'custom';
+    updateUI();
+}
+
+function setCustomStatValue(stat, rawValue) {
+    const value = Number(rawValue);
+    if (Number.isInteger(value) && value >= 3 && value <= 18) {
+        state.baseStats[stat] = value;
+    }
+    updateUI();
+}
+
 function toggleSkill(skillKey, isChecked) {
     if (isChecked) {
         state.skillsSelected.add(skillKey);
@@ -1315,6 +1439,96 @@ function toggleSkill(skillKey, isChecked) {
         state.expertiseSelected.delete(skillKey);
     }
     updateUI();
+}
+
+function toggleCustomBackgroundSkill(skillKey, isChecked) {
+    if (isChecked && state.customBackgroundSkills.size >= 2) return;
+    if (isChecked) state.customBackgroundSkills.add(skillKey);
+    else state.customBackgroundSkills.delete(skillKey);
+    updateUI();
+}
+
+function getWarlockInvocationCount(level) {
+    let count = 0;
+    Object.entries(PROGRESSION.WARLOCK_INVOCATION_COUNTS || {}).forEach(([requiredLevel, amount]) => {
+        if (level >= Number(requiredLevel)) count = amount;
+    });
+    return count;
+}
+
+function toggleWarlockInvocation(invocationKey, isChecked) {
+    const count = getWarlockInvocationCount(parseInt(document.getElementById('level').value) || 1);
+    if (isChecked && state.invocationsSelected.size >= count) return;
+    if (isChecked) state.invocationsSelected.add(invocationKey);
+    else state.invocationsSelected.delete(invocationKey);
+    updateUI();
+}
+
+function setWarlockPactBoon(boon) {
+    state.warlockPactBoon = boon;
+    updateUI();
+}
+
+function renderWarlockOptions(classKey, level) {
+    const section = document.getElementById('warlock-options-section');
+    const boonContainer = document.getElementById('warlock-pact-boon-container');
+    const boonSelect = document.getElementById('warlock-pact-boon');
+    const list = document.getElementById('warlock-invocations-list');
+    if (!section) return;
+    const invocationCount = classKey === 'warlock' ? getWarlockInvocationCount(level) : 0;
+    section.classList.toggle('hidden', classKey !== 'warlock' || level < 2);
+    if (classKey !== 'warlock') {
+        state.invocationsSelected.clear();
+        state.warlockPactBoon = '';
+        boonSelect.innerHTML = '';
+        list.innerHTML = '';
+        return;
+    }
+    if (level < 3) {
+        state.warlockPactBoon = '';
+        boonSelect.value = '';
+    }
+    if (level < 2) {
+        state.invocationsSelected.clear();
+        list.innerHTML = '';
+        return;
+    }
+
+    boonContainer.classList.toggle('hidden', level < 3);
+    if (level >= 3) {
+        const options = [['', 'Wybierz dar paktu'], ['chain', 'Pakt Łańcucha'], ['blade', 'Pakt Ostrza'], ['tome', 'Pakt Księgi']];
+        boonSelect.innerHTML = options.map(([value, label]) => `<option value="${value}" ${state.warlockPactBoon === value ? 'selected' : ''}>${label}</option>`).join('');
+    }
+    if (state.invocationsSelected.size > invocationCount) {
+        state.invocationsSelected = new Set(Array.from(state.invocationsSelected).slice(0, invocationCount));
+    }
+    for (const key of state.invocationsSelected) {
+        const invocation = PROGRESSION.WARLOCK_INVOCATIONS[key];
+        const hasCantrip = !invocation.requires_cantrip || Array.from(state.selectedCantrips).some(id =>
+            id === invocation.requires_cantrip || (invocation.requires_cantrip === 'eldritch_blast' && id === 'nieziemskie_uderzenie'));
+        if ((invocation.requires_level && level < invocation.requires_level) ||
+            (invocation.requires_pact && invocation.requires_pact !== state.warlockPactBoon) || !hasCantrip) {
+            state.invocationsSelected.delete(key);
+        }
+    }
+    document.getElementById('warlock-invocations-count').innerText = `Wybierz ${invocationCount} inwokacje (${state.invocationsSelected.size}/${invocationCount}).`;
+
+    list.innerHTML = Object.entries(PROGRESSION.WARLOCK_INVOCATIONS || {}).map(([key, invocation]) => {
+        const hasRequiredCantrip = !invocation.requires_cantrip || Array.from(state.selectedCantrips).some(id =>
+            id === invocation.requires_cantrip || (invocation.requires_cantrip === 'eldritch_blast' && id === 'nieziemskie_uderzenie'));
+        const hasRequiredLevel = !invocation.requires_level || level >= invocation.requires_level;
+        const hasRequiredPact = !invocation.requires_pact || state.warlockPactBoon === invocation.requires_pact;
+        const eligible = hasRequiredCantrip && hasRequiredLevel && hasRequiredPact;
+        const selected = state.invocationsSelected.has(key);
+        const disabled = !eligible || (!selected && state.invocationsSelected.size >= invocationCount);
+        const requirement = invocation.requires_cantrip ? 'Wymaga Mistycznego Uderzenia.'
+            : invocation.requires_pact ? `Wymaga odpowiedniego Daru Paktu${invocation.requires_level ? ` i poziomu ${invocation.requires_level}` : ''}.`
+            : '';
+        return `<label class="flex gap-2 p-2 rounded border ${selected ? 'border-rose-500/40 bg-rose-950/20' : 'border-gray-800 bg-gray-950/20'} ${disabled ? 'opacity-50' : 'cursor-pointer'}">
+            <input type="checkbox" name="invocations" value="${key}" ${selected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleWarlockInvocation('${key}', this.checked)" class="mt-0.5 accent-rose-500">
+            <span><strong class="block text-xs text-gray-200">${invocation.name}</strong><span class="block text-[10px] text-gray-400">${invocation.description}</span>${requirement ? `<span class="block text-[9px] text-amber-500/80 mt-1">${requirement}</span>` : ''}</span>
+        </label>`;
+    }).join('');
 }
 
 function toggleExpertise(skillKey, isChecked) {
@@ -1372,12 +1586,172 @@ function setAsiStat2(idx, stat) {
     updateUI();
 }
 
+function calculateShopSpentCp() {
+    return Object.entries(state.purchasedItems).reduce((total, [itemId, quantity]) => {
+        const item = window.SHOP_ITEMS && window.SHOP_ITEMS[itemId];
+        return total + (item ? item.price_cp * quantity : 0);
+    }, 0);
+}
+
+function formatShopPrice(priceCp) {
+    const gold = Math.floor(priceCp / 100);
+    const silver = Math.floor((priceCp % 100) / 10);
+    const copper = priceCp % 10;
+    return [gold && `${gold} sz`, silver && `${silver} ss`, copper && `${copper} sm`].filter(Boolean).join(' ') || '0 sm';
+}
+
+function syncEquipmentFormFields() {
+    document.getElementById('equipment_mode').value = state.equipmentMode;
+    document.getElementById('starting_gold_gp').value = state.startingGoldGp;
+    document.getElementById('purchased_items_json').value = JSON.stringify(state.purchasedItems);
+    document.getElementById('equipped_armor').value = state.equippedArmor;
+}
+
+function setEquipmentMode(mode) {
+    state.equipmentMode = mode;
+    syncEquipmentFormFields();
+    updateUI();
+    renderEquipmentSection();
+}
+
+async function rollStartingGold() {
+    const classKey = document.getElementById('char_class').value;
+    if (Object.keys(state.purchasedItems).length && !confirm('Ponowny rzut wyczyści zakupy. Kontynuować?')) return;
+    try {
+        const response = await fetch(`/api/starting-gold/${classKey}`, { method: 'POST' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.detail || 'Nie udało się wykonać rzutu.');
+        state.startingGoldGp = result.gold_gp;
+        state.goldRollClass = classKey;
+        state.goldRollDice = result.dice;
+        state.purchasedItems = {};
+        state.equippedArmor = 'none';
+        syncEquipmentFormFields();
+        updateUI();
+        renderEquipmentSection();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function changePurchasedItem(itemId, delta) {
+    const item = window.SHOP_ITEMS[itemId];
+    const quantity = (state.purchasedItems[itemId] || 0) + delta;
+    if (!item || quantity < 0 || quantity > 99) return;
+    if (delta > 0 && calculateShopSpentCp() + item.price_cp > state.startingGoldGp * 100) return;
+    if (quantity === 0) delete state.purchasedItems[itemId];
+    else state.purchasedItems[itemId] = quantity;
+    if (state.equippedArmor === itemId && quantity === 0) state.equippedArmor = 'none';
+    if (item.kind === 'armor' && quantity > 0 && state.equippedArmor === 'none') state.equippedArmor = itemId;
+    syncEquipmentFormFields();
+    updateUI();
+    renderEquipmentSection();
+}
+
+function selectPurchasedArmor(armorId) {
+    state.equippedArmor = armorId;
+    syncEquipmentFormFields();
+    updateUI();
+    renderEquipmentSection();
+}
+
+function renderEquipmentShop(classKey, shopContainer) {
+    const rule = window.STARTING_GOLD_RULES[classKey];
+    const rolledForClass = state.goldRollClass === classKey && state.startingGoldGp > 0;
+    const formula = `${rule.dice}k4 x ${rule.multiplier}`;
+    const spentCp = calculateShopSpentCp();
+    const remainingCp = Math.max(0, state.startingGoldGp * 100 - spentCp);
+    const rollDetails = rolledForClass
+        ? `<p class="text-xs text-gray-400 mt-1">Rzut: ${state.goldRollDice.join(' + ')} (${formula}) = ${state.startingGoldGp} sz</p>`
+        : `<p class="text-xs text-gray-400 mt-1">Wzór klasy: ${formula}${rule.phb ? ' (PHB)' : ' (wariant poza PHB)'}</p>`;
+    let content = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-gray-800 rounded-lg p-3 bg-gray-950/40">
+            <div>
+                <div class="text-sm font-bold text-amber-300">${rolledForClass ? `${state.startingGoldGp} sz` : 'Złoto startowe'}</div>
+                ${rollDetails}
+            </div>
+            <button type="button" onclick="rollStartingGold()" class="px-3 py-2 text-xs font-bold rounded border border-amber-700/50 text-amber-200 hover:bg-amber-950/40">
+                ${rolledForClass ? 'Rzuć ponownie' : 'Rzuć złoto'}
+            </button>
+        </div>`;
+
+    if (!rolledForClass) {
+        shopContainer.innerHTML = content;
+        return;
+    }
+
+    const gold = Math.floor(remainingCp / 100);
+    const silver = Math.floor((remainingCp % 100) / 10);
+    const copper = remainingCp % 10;
+    const remainingText = [gold && `${gold} sz`, silver && `${silver} ss`, copper && `${copper} sm`].filter(Boolean).join(' ') || '0 sm';
+    const ownedArmor = Object.entries(state.purchasedItems)
+        .filter(([itemId, quantity]) => quantity > 0 && window.SHOP_ITEMS[itemId].kind === 'armor');
+    const armorOptions = [`<option value="none" ${state.equippedArmor === 'none' ? 'selected' : ''}>Brak zbroi</option>`]
+        .concat(ownedArmor.map(([itemId]) => `<option value="${itemId}" ${state.equippedArmor === itemId ? 'selected' : ''}>${window.SHOP_ITEMS[itemId].name}</option>`))
+        .join('');
+    content += `
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs border-b border-gray-800 pb-3">
+            <span class="text-gray-400">Wydano: <strong class="text-gray-200">${formatShopPrice(spentCp)}</strong></span>
+            <span class="text-emerald-300">Pozostało: <strong>${remainingText}</strong></span>
+            <label class="flex items-center gap-2 text-gray-400">Założona zbroja
+                <select onchange="selectPurchasedArmor(this.value)" class="input-rpg rounded px-2 py-1 text-xs text-white">${armorOptions}</select>
+            </label>
+        </div>`;
+
+    const openCategories = new Set(
+        [...shopContainer.querySelectorAll('details[open]')].map(details => details.dataset.shopCategory)
+    );
+    const groups = {};
+    Object.entries(window.SHOP_ITEMS).forEach(([itemId, item]) => {
+        (groups[item.category] ||= []).push([itemId, item]);
+    });
+    content += '<div class="space-y-2">';
+    Object.entries(groups).forEach(([category, items]) => {
+        const rows = items.map(([itemId, item]) => {
+            const quantity = state.purchasedItems[itemId] || 0;
+            const canAdd = spentCp + item.price_cp <= state.startingGoldGp * 100;
+            const description = item.description || 'Przedmiot wyposażenia przygodowego; szczegóły zastosowania zależą od jego rodzaju.';
+            return `
+                <div class="flex items-center justify-between gap-3 border-b border-gray-800/70 py-2" data-shop-name="${item.name.toLowerCase()}">
+                    <div class="min-w-0"><div class="text-xs text-gray-200">${item.name}</div><div class="text-[10px] text-gray-500">${formatShopPrice(item.price_cp)}</div><p class="text-[10px] text-gray-400 mt-0.5 leading-relaxed">${description}</p></div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="changePurchasedItem('${itemId}', -1)" aria-label="Usuń ${item.name}" class="w-7 h-7 rounded border border-gray-700 text-gray-300 disabled:opacity-30" ${quantity ? '' : 'disabled'}>−</button>
+                        <span class="w-5 text-center text-xs font-mono text-amber-200">${quantity}</span>
+                        <button type="button" onclick="changePurchasedItem('${itemId}', 1)" aria-label="Kup ${item.name}" class="w-7 h-7 rounded border border-gray-700 text-gray-300 disabled:opacity-30" ${canAdd ? '' : 'disabled'}>+</button>
+                    </div>
+                </div>`;
+        }).join('');
+        const openAttribute = openCategories.has(category) ? 'open' : '';
+        content += `<details data-shop-category="${category}" class="border border-gray-800 rounded-lg px-3" ${openAttribute}><summary class="cursor-pointer py-2 text-xs font-bold text-gray-300">${category}</summary><div class="max-h-72 overflow-y-auto">${rows}</div></details>`;
+    });
+    content += '</div>';
+    shopContainer.innerHTML = content;
+}
+
 // Equipment section rendering
 function renderEquipmentSection() {
     const classKey = document.getElementById('char_class').value;
     const eqSection = document.getElementById('equipment-section');
     const eqContainer = document.getElementById('equipment-container');
-    if (!eqSection || !eqContainer) return;
+    const shopContainer = document.getElementById('equipment-shop');
+    if (!eqSection || !eqContainer || !shopContainer) return;
+
+    if (state.equipmentMode === 'starting_gold' && state.goldRollClass && state.goldRollClass !== classKey) {
+        state.startingGoldGp = 0;
+        state.goldRollClass = null;
+        state.goldRollDice = [];
+        state.purchasedItems = {};
+        state.equippedArmor = 'none';
+    }
+    syncEquipmentFormFields();
+    const packageButton = document.getElementById('equipment-mode-package');
+    const goldButton = document.getElementById('equipment-mode-gold');
+    packageButton.className = state.equipmentMode === 'package'
+        ? 'px-3 py-2 text-xs font-bold rounded border border-amber-700/50 text-amber-200 bg-amber-950/20'
+        : 'px-3 py-2 text-xs font-bold rounded border border-gray-700 text-gray-400 hover:text-amber-200';
+    goldButton.className = state.equipmentMode === 'starting_gold'
+        ? 'px-3 py-2 text-xs font-bold rounded border border-amber-700/50 text-amber-200 bg-amber-950/20'
+        : 'px-3 py-2 text-xs font-bold rounded border border-gray-700 text-gray-400 hover:text-amber-200';
 
     const EQUIPMENT = window.CLASS_EQUIPMENT;
     if (!EQUIPMENT || !EQUIPMENT[classKey]) {
@@ -1385,8 +1759,16 @@ function renderEquipmentSection() {
         return;
     }
     eqSection.classList.remove('hidden');
-    eqContainer.innerHTML = '';
+    eqContainer.classList.toggle('hidden', state.equipmentMode !== 'package');
+    shopContainer.classList.toggle('hidden', state.equipmentMode !== 'starting_gold');
+    if (state.equipmentMode === 'starting_gold') {
+        eqContainer.innerHTML = '';
+        renderEquipmentShop(classKey, shopContainer);
+        return;
+    }
 
+    shopContainer.innerHTML = '';
+    eqContainer.innerHTML = '';
     const options = EQUIPMENT[classKey].options;
     options.forEach(opt => {
         const isSelected = state.selectedEquipment === opt.id;
@@ -1534,6 +1916,14 @@ async function autoGenerateCharacter() {
 
         // Equipment
         state.selectedEquipment = data.equipment_package || null;
+        state.equipmentMode = 'package';
+        state.startingGoldGp = 0;
+        state.goldRollClass = null;
+        state.goldRollDice = [];
+        state.purchasedItems = {};
+        state.equippedArmor = 'none';
+        state.invocationsSelected.clear();
+        state.warlockPactBoon = '';
 
         updateUI();
         renderEquipmentSection();
@@ -1543,6 +1933,127 @@ async function autoGenerateCharacter() {
     } finally {
         btn.disabled = false;
         btn.innerText = '🎲 Losuj całą postać';
+    }
+}
+
+function getCharacterSaveData() {
+    return {
+        format: 'dnd-character-creator',
+        version: 1,
+        character: {
+            name: document.querySelector('[name="name"]').value,
+            char_class: document.getElementById('char_class').value,
+            level: Number(document.getElementById('level').value),
+            race: document.getElementById('race').value,
+            background: document.getElementById('background').value,
+            alignment: document.querySelector('[name="alignment"]').value,
+            stats: { ...state.baseStats },
+            stat_mode: state.statMode,
+            skills: Array.from(state.skillsSelected),
+            custom_background_skills: Array.from(state.customBackgroundSkills),
+            expertise: Array.from(state.expertiseSelected),
+            invocations: Array.from(state.invocationsSelected),
+            warlock_pact_boon: state.warlockPactBoon,
+            subclass: document.getElementById('subclass').value || '',
+            cantrips: Array.from(state.selectedCantrips),
+            ...Object.fromEntries(Array.from({ length: 9 }, (_, index) => [
+                `spells_${index + 1}`,
+                Array.from(state[`selectedSpells${index + 1}`])
+            ])),
+            asi_slots: state.asiSlots,
+            human_variant_feat: state.humanVariantFeat,
+            custom_racial_asi_enabled: state.customRacialAsiEnabled,
+            custom_racial_asi: state.customRacialAsi,
+            equipment_package: state.selectedEquipment,
+            equipment_mode: state.equipmentMode,
+            starting_gold_gp: state.startingGoldGp,
+            gold_roll_class: state.goldRollClass,
+            gold_roll_dice: state.goldRollDice,
+            purchased_items: state.purchasedItems,
+            equipped_armor: state.equippedArmor,
+        }
+    };
+}
+
+function exportCharacterFile() {
+    const data = getCharacterSaveData();
+    const file = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    const safeName = (data.character.name || 'postac').trim().replace(/[^a-z0-9_-]+/gi, '_');
+    link.href = url;
+    link.download = `${safeName || 'postac'}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    document.getElementById('character-file-status').textContent = 'Zapisano plik postaci. Możesz go wczytać ponownie po wybraniu kolejnego poziomu.';
+}
+
+async function importCharacterFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const status = document.getElementById('character-file-status');
+    try {
+        const save = JSON.parse(await file.text());
+        const character = save && save.format === 'dnd-character-creator' && save.version === 1
+            ? save.character
+            : null;
+        if (!character || typeof character !== 'object') {
+            throw new Error('Nieobsługiwany format pliku. Wczytaj plik JSON zapisany w tym kreatorze.');
+        }
+
+        const level = Number(character.level);
+        const statKeys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+        if (!CLASSES[character.char_class] || !RACES[character.race] || !BACKGROUNDS[character.background]) {
+            throw new Error('Plik zawiera nieznaną klasę, rasę lub pochodzenie.');
+        }
+        if (!Number.isInteger(level) || level < 1 || level > 20 || !character.stats ||
+            statKeys.some(stat => !Number.isInteger(Number(character.stats[stat])) || Number(character.stats[stat]) < 3 || Number(character.stats[stat]) > 18)) {
+            throw new Error('Plik zawiera nieprawidłowy poziom lub wartości cech.');
+        }
+
+        document.querySelector('[name="name"]').value = character.name || 'Bohater';
+        document.querySelector('[name="alignment"]').value = character.alignment || 'Neutralny';
+        document.getElementById('char_class').value = character.char_class;
+        document.getElementById('level').value = level;
+        document.getElementById('race').value = character.race;
+        document.getElementById('background').value = character.background;
+        state.baseStats = Object.fromEntries(statKeys.map(stat => [stat, Number(character.stats[stat])]));
+        state.statMode = ['point_buy', 'dice', 'custom'].includes(character.stat_mode) ? character.stat_mode : 'custom';
+        document.getElementById('stat_mode').value = state.statMode;
+        state.skillsSelected = new Set(Array.isArray(character.skills) ? character.skills : []);
+        state.customBackgroundSkills = new Set(Array.isArray(character.custom_background_skills) ? character.custom_background_skills : []);
+        state.expertiseSelected = new Set(Array.isArray(character.expertise) ? character.expertise : []);
+        state.invocationsSelected = new Set(Array.isArray(character.invocations) ? character.invocations : []);
+        state.warlockPactBoon = character.warlock_pact_boon || '';
+        state.selectedCantrips = new Set(Array.isArray(character.cantrips) ? character.cantrips : []);
+        for (let spellLevel = 1; spellLevel <= 9; spellLevel++) {
+            state[`selectedSpells${spellLevel}`] = new Set(Array.isArray(character[`spells_${spellLevel}`]) ? character[`spells_${spellLevel}`] : []);
+        }
+        state.asiSlots = Array.isArray(character.asi_slots) ? character.asi_slots : [];
+        state.humanVariantFeat = character.human_variant_feat || '';
+        state.customRacialAsiEnabled = Boolean(character.custom_racial_asi_enabled);
+        state.customRacialAsi = character.custom_racial_asi || state.customRacialAsi;
+        state.selectedEquipment = character.equipment_package || null;
+        state.equipmentMode = character.equipment_mode === 'starting_gold' ? 'starting_gold' : 'package';
+        state.startingGoldGp = Number(character.starting_gold_gp) || 0;
+        state.goldRollClass = character.gold_roll_class || null;
+        state.goldRollDice = Array.isArray(character.gold_roll_dice) ? character.gold_roll_dice : [];
+        state.purchasedItems = character.purchased_items && typeof character.purchased_items === 'object' ? character.purchased_items : {};
+        state.equippedArmor = character.equipped_armor || 'none';
+
+        updateUI();
+        const subclassSelect = document.getElementById('subclass');
+        if (character.subclass && Array.from(subclassSelect.options).some(option => option.value === character.subclass)) {
+            subclassSelect.value = character.subclass;
+            updateUI();
+        }
+        renderEquipmentSection();
+        status.textContent = `Wczytano postać „${character.name || 'Bohater'}”. Zmień poziom i uzupełnij nowe wybory, aby ją levelować.`;
+    } catch (error) {
+        status.textContent = error.message || 'Nie udało się wczytać pliku postaci.';
+    } finally {
+        input.value = '';
     }
 }
 

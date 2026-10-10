@@ -5,14 +5,16 @@ from fastapi.templating import Jinja2Templates
 import random
 
 from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, FEATS, WILD_SHAPE_FORMS, ELEMENTAL_FORMS, SPELLS_BY_ID, get_spells
-from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS
+from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS, SHOP_ITEMS, STARTING_GOLD_RULES
 from app.core import progression
 from app.schemas.character import CharacterCreateSchema
 from app.services.character import (
     build_character_sheet,
     auto_assign_stats_try_harder,
     auto_assign_stats_balanced,
-    validate_point_buy
+    validate_point_buy,
+    validate_custom_stats,
+    validate_starting_gold_purchases,
 )
 from app.services.pdf import generate_character_pdf
 
@@ -45,6 +47,8 @@ async def index(request: Request):
             "class_equipment": CLASS_EQUIPMENT,
             "weapons": WEAPONS,
             "armors": ARMORS,
+            "shop_items": SHOP_ITEMS,
+            "starting_gold_rules": STARTING_GOLD_RULES,
             "wild_shape_forms": WILD_SHAPE_FORMS,
             "elemental_forms": ELEMENTAL_FORMS,
             "progression": {
@@ -59,7 +63,10 @@ async def index(request: Request):
                 "WARLOCK_SLOTS": progression.WARLOCK_SLOTS,
                 "CASTER_TYPE": progression.CASTER_TYPE,
                 "CLASS_FEATURES": progression.CLASS_FEATURES,
-                "ASI_LEVELS": progression.ASI_LEVELS
+                "ASI_LEVELS": progression.ASI_LEVELS,
+                "WARLOCK_INVOCATIONS": progression.WARLOCK_INVOCATIONS,
+                "WARLOCK_INVOCATION_COUNTS": progression.WARLOCK_INVOCATION_COUNTS,
+                "HEXBLADE_EXPANDED_SPELLS": progression.HEXBLADE_EXPANDED_SPELLS,
             }
         }
     )
@@ -86,6 +93,21 @@ async def api_auto_stats(data: dict):
         stats = auto_assign_stats_balanced(char_class, race)
         
     return {"stats": stats}
+
+
+@app.post("/api/starting-gold/{char_class}")
+async def api_starting_gold(char_class: str):
+    """Roll the PHB starting wealth formula for the selected class."""
+    rule = STARTING_GOLD_RULES.get(char_class)
+    if not rule:
+        raise HTTPException(status_code=400, detail="Ta klasa nie ma wzoru na złoto startowe.")
+    dice = [random.randint(1, 4) for _ in range(rule["dice"])]
+    return {
+        "dice": dice,
+        "multiplier": rule["multiplier"],
+        "gold_gp": sum(dice) * rule["multiplier"],
+        "phb": rule["phb"],
+    }
 
 
 @app.post("/api/auto-character")
@@ -211,7 +233,10 @@ async def generate_pdf(request: Request):
     # Parse form data through Pydantic schema
     form_data = await CharacterCreateSchema.from_form(request)
     
-    # Validate Point Buy if selected
+    if form_data.stat_mode not in {"point_buy", "dice", "custom"}:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy tryb wyboru statystyk.")
+
+    # Validate stats according to the selected generation mode
     if form_data.stat_mode == "point_buy":
         stats_to_validate = {
             "str": form_data.strength,
@@ -224,6 +249,29 @@ async def generate_pdf(request: Request):
         is_valid, err_msg = validate_point_buy(stats_to_validate)
         if not is_valid:
             raise HTTPException(status_code=400, detail=err_msg)
+    elif form_data.stat_mode == "custom":
+        stats_to_validate = {
+            "str": form_data.strength,
+            "dex": form_data.dexterity,
+            "con": form_data.constitution,
+            "int": form_data.intelligence,
+            "wis": form_data.wisdom,
+            "cha": form_data.charisma,
+        }
+        is_valid, err_msg = validate_custom_stats(stats_to_validate)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=err_msg)
+
+    if form_data.equipment_mode == "starting_gold":
+        try:
+            validate_starting_gold_purchases(
+                form_data.char_class,
+                form_data.starting_gold_gp,
+                form_data.purchased_items_json,
+                form_data.equipped_armor,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
             
     # Build complete character sheet calculations
     try:
@@ -247,6 +295,11 @@ async def generate_pdf(request: Request):
         selected = getattr(form_data, f"selected_spells_{level}")
         for spell_id in selected:
             s = SPELLS_BY_ID.get(spell_id)
+            if not s and form_data.char_class == "warlock" and form_data.subclass == "hexblade":
+                s = next(
+                    (spell for spell_group in progression.HEXBLADE_EXPANDED_SPELLS.values() for spell in spell_group if spell["id"] == spell_id),
+                    None,
+                )
             if s:
                 spell_names.append(s["name_pl"])
                 all_spell_ids.append((spell_id, s["name_pl"], level))

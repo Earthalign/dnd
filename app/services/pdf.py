@@ -65,8 +65,18 @@ def generate_character_pdf(char_data: dict) -> bytes:
     save_profs = char_data.get('saving_throw_profs', [])
     skill_profs = char_data.get('skill_profs', [])
 
+    skill_aliases = {
+        "stealth": "ukrycie",
+        "survival": "przetrwanie",
+        "zwierzęta": "zwierzęta",
+        "zwierzeta": "zwierzęta",
+        "sleight_of_hand": "sleight_of_hand",
+        "wgląd": "wgląd",
+    }
+
     def has_skill_prof(skill_key: str) -> bool:
-        return skill_key in skill_profs
+        canonical = skill_aliases.get(skill_key.casefold(), skill_key.casefold())
+        return any(skill_aliases.get(str(prof).casefold(), str(prof).casefold()) == canonical for prof in skill_profs)
 
     fields_to_fill = {
         # NAGŁÓWEK
@@ -134,8 +144,8 @@ def generate_character_pdf(char_data: dict) -> bytes:
         "Pole tekstowe 141": ms(skills.get('perswazja',       mods['cha'])),  # Perswazja (Cha)
         "Pole tekstowe 142": ms(skills.get('przyroda',        mods['int'])),  # Przyroda (Int)
         "Pole tekstowe 143": ms(skills.get('religia',         mods['int'])),  # Religia (Int)
-        "Pole tekstowe 144": ms(skills.get('ukrycie',         mods['dex'])),  # Skradanie się (Zrc)
-        "Pole tekstowe 145": ms(skills.get('przetrwanie',     mods['wis'])),  # Sztuka przetrwania (Mdr)
+        "Pole tekstowe 144": ms(skills.get('ukrycie', skills.get('stealth', mods['dex']))),  # Skradanie się (Zrc)
+        "Pole tekstowe 145": ms(skills.get('przetrwanie', skills.get('survival', mods['wis']))),  # Sztuka przetrwania (Mdr)
         "Pole tekstowe 146": ms(skills.get('badanie',         mods['int'])),  # Śledztwo (Int)
         "Pole tekstowe 147": ms(skills.get('arcana',          mods['int'])),  # Wiedza tajemna (Int)
         "Pole tekstowe 148": ms(skills.get('wykonanie',       mods['cha'])),  # Występy (Cha)
@@ -242,12 +252,20 @@ def generate_character_pdf(char_data: dict) -> bytes:
         for widget in page.widgets():
             name = widget.field_name
             if name in fields_to_fill:
-                widget.field_value = fields_to_fill[name]
+                requested_value = fields_to_fill[name]
+                if widget.field_type == fitz.PDF_WIDGET_TYPE_CHECKBOX:
+                    widget.field_value = widget.on_state() if requested_value else "Off"
+                else:
+                    widget.field_value = requested_value
+                    if name == "korzysci i zdolnosci":
+                        text_length = max(900, len(str(requested_value)))
+                        widget.text_fontsize = max(4.0, min(8.0, 8.0 * (900 / text_length) ** 0.5))
                 widget.update()
-                try:
-                    doc.xref_set_key(widget.xref, "AP", "null")
-                except Exception:
-                    pass
+                if widget.field_type != fitz.PDF_WIDGET_TYPE_CHECKBOX:
+                    try:
+                        doc.xref_set_key(widget.xref, "AP", "null")
+                    except Exception:
+                        pass
 
     # --- NOWA STRONA: CZARY (SPELLBOOK) ---
     spell_ids = char_data.get("all_spell_ids", [])
