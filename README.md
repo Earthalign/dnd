@@ -9,13 +9,15 @@
 ## ✨ Features
 
 ### 🧙 Character Creator
-- **Full D&D 5e PHB compliance** — races, classes, backgrounds, and skill rules implemented faithfully
+- **2014 D&D 5e character rules** — PHB options plus selected official supplemental race variants; campaign availability is determined by the DM
 - **Point Buy system** — 27-point budget with live cost tracking and validation
 - **Dice Roll mode** — roll 4d6 drop lowest for classic stat generation
 - **Auto-Assign stats** — smart stat optimizer that distributes stats based on class priorities
 - **Racial bonuses** — automatically applied ASI (Ability Score Improvements) per race
 - **Armor Class preview** — computed in real time, with Barbarian/Monk variants
 - **Initiative & Passive Perception** — derived stats updated dynamically
+
+Race selection groups humans, elves, dwarves, gnomes, halflings, and aasimar with their supported variants. The human variant is an optional PHB 2014 rule. Race summaries use [dnd5e.wikidot.com](https://dnd5e.wikidot.com/) as a reference; the app does not include every published lineage or setting-specific option, and the DM determines which sources are allowed.
 
 ### 🎓 Skill Proficiencies
 - Class-based skill choices with correct limits (e.g., Rogue gets 4, Fighter gets 2)

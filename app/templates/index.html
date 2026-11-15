@@ -131,11 +131,11 @@
                         <select id="race-family" onchange="onRaceFamilyChange()"
                             class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
                             {% for key, family in race_families.items() %}
-                            <option value="{{ key }}">{{ family.name }}</option>
+                            <option value="{{ key }}" {% if key == "human" %}selected{% endif %}>{{ family.name }}</option>
                             {% endfor %}
                             {% for key, val in races.items() %}
                             {% if key not in race_subrace_keys %}
-                            <option value="{{ key }}" {% if key == "human" %}selected{% endif %}>{{ val.name }}</option>
+                            <option value="{{ key }}">{{ val.name }}</option>
                             {% endif %}
                             {% endfor %}
                         </select>

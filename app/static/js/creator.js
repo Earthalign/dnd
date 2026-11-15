@@ -72,10 +72,40 @@ function populateRaceSubraces(familyKey, selectedRaceKey = '') {
         const race = RACES[raceKey];
         const option = document.createElement('option');
         option.value = raceKey;
-        option.textContent = currentLang === 'en' && race.name_en ? race.name_en : race.name;
+        const name = currentLang === 'en' && race.subrace_name_en
+            ? race.subrace_name_en
+            : race.subrace_name || race.name;
+        option.textContent = name;
         subraceSelect.appendChild(option);
     }
     subraceSelect.value = subraces.includes(selectedRaceKey) ? selectedRaceKey : subraces[0];
+}
+
+function refreshRaceSelectLabels() {
+    const familySelect = document.getElementById('race-family');
+    const familyKey = familySelect.value;
+    for (const option of familySelect.options) {
+        const family = RACE_FAMILIES[option.value];
+        if (family) {
+            option.textContent = currentLang === 'en' && family.name_en
+                ? family.name_en
+                : family.name;
+        } else {
+            const race = RACES[option.value];
+            if (race) option.textContent = currentLang === 'en' && race.name_en ? race.name_en : race.name;
+        }
+    }
+
+    const subraceLabel = document.querySelector('label[for="race-subrace"]');
+    const family = RACE_FAMILIES[familyKey];
+    if (subraceLabel) {
+        subraceLabel.textContent = family
+            ? (currentLang === 'en' && family.subrace_label_en
+                ? family.subrace_label_en
+                : family.subrace_label || t('lbl_race_subrace'))
+            : t('lbl_race_subrace');
+    }
+    if (family) populateRaceSubraces(familyKey, document.getElementById('race').value);
 }
 
 function onRaceFamilyChange() {
@@ -467,6 +497,7 @@ function toggleFeat(featKey, isChecked) {
 }
 
 function updateUI() {
+    refreshRaceSelectLabels();
     const raceKey = document.getElementById('race').value;
     const classKey = document.getElementById('char_class').value;
     const bgKey = document.getElementById('background').value;
@@ -1467,6 +1498,7 @@ function changeStat(statAbbr, amount) {
     
     if (newVal >= 8 && newVal <= 15) {
         state.baseStats[statAbbr] = newVal;
+        setSelectedRace(document.getElementById('race').value);
         updateUI();
     }
 }
