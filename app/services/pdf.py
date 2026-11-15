@@ -79,10 +79,9 @@ def generate_character_pdf(char_data: dict) -> bytes:
         return any(skill_aliases.get(str(prof).casefold(), str(prof).casefold()) == canonical for prof in skill_profs)
 
     fields_to_fill = {
-        # NAGŁÓWEK
-        "Imi\u0119 postaci": char_data["name"],
-        "Imi postaci":        char_data["name"],
-        "kip":  f"{char_data['class_name']} {char_data['level']}",
+        # NAGŁÓWEK - correct field name for character name
+        "Imię postaci": char_data["name"],
+        "kip": f"{char_data['class_name']} {char_data['level']}",
         "rasa": char_data["race_name"],
         "poch": char_data["background_name"],
         "char": char_data["alignment"],
