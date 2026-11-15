@@ -140,15 +140,17 @@ pre-commit run --all-files
 pytest
 ```
 
-The `Python CI` GitHub Actions workflow runs pre-commit and pytest as separate jobs on pushes and pull requests. Its Copilot summary job runs only for pushes to `main`.
+The `Python CI` GitHub Actions workflow runs pre-commit and pytest as separate jobs on pushes and pull requests. Its Copilot summary job runs only for pushes to `main`; the read-only Copilot review job runs on pull requests from branches in this repository (not forks).
 
 ---
 
-## 🤖 AI Commit Summaries
+## 🤖 AI Commit Summaries and Reviews
 
-The Copilot job summarizes the latest commit pushed to `main` and displays the result in the workflow run's **Summary** tab. It uses the official GitHub Copilot CLI. Add a fine-grained personal access token with the **Copilot Requests** account permission as the `COPILOT_GITHUB_TOKEN` Actions repository secret under **Settings → Secrets and variables → Actions**. The token must belong to a personal account with an active Copilot subscription.
+The Copilot summary job describes the latest commit pushed to `main`. The review job analyzes a pull request diff using a fixed checklist (scope, correctness, regressions, tests, security/error handling, findings, and limitations). Both results appear in the workflow run's **Summary** tab; the reviewer does not post comments or modify code.
 
-The commit diff is sent to GitHub Copilot for processing. Do not enable this workflow for repositories containing code or data that must not be shared with GitHub.
+Both jobs use the official GitHub Copilot CLI. Add a fine-grained personal access token with the **Copilot Requests** account permission as the `COPILOT_GITHUB_TOKEN` Actions repository secret under **Settings → Secrets and variables → Actions**. The token must belong to a personal account with an active Copilot subscription.
+
+Each AI job reports the number of Copilot CLI prompts it submitted. The CLI does not expose exact token consumption or the remaining account quota, so those values are reported as unavailable rather than estimated; check [GitHub billing settings](https://github.com/settings/billing) for account usage. The commit or pull request diff is sent to GitHub Copilot for processing. Do not enable these jobs for repositories containing code or data that must not be shared with GitHub.
 
 ---
 
