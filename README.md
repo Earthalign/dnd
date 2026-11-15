@@ -140,13 +140,13 @@ pre-commit run --all-files
 pytest
 ```
 
-GitHub Actions runs pre-commit and pytest in separate workflows on pushes and pull requests.
+The `Python CI` GitHub Actions workflow runs pre-commit and pytest as separate jobs on pushes and pull requests. Its Copilot summary job runs only for pushes to `main`.
 
 ---
 
 ## 🤖 AI Commit Summaries
 
-The `AI commit summary` GitHub Actions workflow summarizes the latest commit pushed to `main` and displays the result in that workflow run's **Summary** tab. It uses the official GitHub Copilot CLI. Add a fine-grained personal access token with the **Copilot Requests** account permission as the `COPILOT_GITHUB_TOKEN` Actions repository secret under **Settings → Secrets and variables → Actions**. The token must belong to a personal account with an active Copilot subscription.
+The Copilot job summarizes the latest commit pushed to `main` and displays the result in the workflow run's **Summary** tab. It uses the official GitHub Copilot CLI. Add a fine-grained personal access token with the **Copilot Requests** account permission as the `COPILOT_GITHUB_TOKEN` Actions repository secret under **Settings → Secrets and variables → Actions**. The token must belong to a personal account with an active Copilot subscription.
 
 The commit diff is sent to GitHub Copilot for processing. Do not enable this workflow for repositories containing code or data that must not be shared with GitHub.
 
