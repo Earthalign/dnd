@@ -127,12 +127,25 @@
                     <div>
                         <label class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1"
                             data-i18n="lbl_race">Rasa</label>
-                        <select name="race" id="race" onchange="updateUI()"
+                        <input type="hidden" name="race" id="race" value="human">
+                        <select id="race-family" onchange="onRaceFamilyChange()"
                             class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
+                            {% for key, family in race_families.items() %}
+                            <option value="{{ key }}">{{ family.name }}</option>
+                            {% endfor %}
                             {% for key, val in races.items() %}
-                            <option value="{{ key }}">{{ val.name }}</option>
+                            {% if key not in race_subrace_keys %}
+                            <option value="{{ key }}" {% if key == "human" %}selected{% endif %}>{{ val.name }}</option>
+                            {% endif %}
                             {% endfor %}
                         </select>
+                        <div id="race-subrace-container" class="hidden mt-2">
+                            <label for="race-subrace" class="block text-xs text-gray-400 mb-1"
+                                data-i18n="lbl_race_subrace">Podrasa</label>
+                            <select id="race-subrace" onchange="onRaceSubraceChange()"
+                                class="w-full input-rpg rounded-lg px-3 py-2.5 text-white text-sm cursor-pointer">
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Dynamic Race Info -->
@@ -553,6 +566,7 @@
     <script>
         window.CLASSES = {{ classes | tojson }};
         window.RACES = {{ races | tojson }};
+        window.RACE_FAMILIES = {{ race_families | tojson }};
         window.BACKGROUNDS = {{ backgrounds | tojson }};
         window.SKILLS = {{ skills | tojson }};
         window.SPELLS_DATA = {{ spells | tojson }};

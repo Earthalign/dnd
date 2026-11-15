@@ -1,16 +1,10 @@
 import os
 import fitz  # pymupdf
-from typing import Dict
-import textwrap
-import urllib.request
-import json
-import concurrent.futures
+from app.core.spells import get_spell_by_id
 
 # Suppress MuPDF low-level stderr warnings (e.g. broken xref tables in PDF templates).
 # These are non-fatal format quirks — Python-level exceptions are still raised on real errors.
 fitz.TOOLS.mupdf_display_errors(False)
-
-from app.core.spells import SPELLS_BY_ID, get_spell_by_id
 
 def fetch_spell_data(spell_id: str, name_pl: str = None, spell_level: int = 0):
     """Pobiera dane czaru w języku polskim z lokalnej bazy Spells/."""

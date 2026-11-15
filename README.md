@@ -2,7 +2,7 @@
 
 > A full-featured web application for building Dungeons & Dragons 5th Edition characters, complete with automated stat generation, skill proficiency management, spell selection, and instant PDF character sheet export.
 
-**Live Demo:** [Deployed on Render.com](https://your-app.onrender.com) &nbsp;|&nbsp; **Author:** [Witold Włuczkowski](https://earthalign.github.io/witoldwluczkowski/strona2.html)
+**Live Demo:** [Deployed on Render.com](https://your-app.onrender.com) &nbsp;|&nbsp; **Author:** [Witold Włuczkowski](https://earthalign.github.io/witoldwluczkowski/main.html)
 
 ---
 
@@ -129,6 +129,29 @@ Open your browser at **http://localhost:10000**
 
 ---
 
+## ✅ Quality Checks
+
+Install development tools, set up the Git hooks, then run the checks locally:
+
+```bash
+python -m pip install -r requirements-dev.txt
+pre-commit install
+pre-commit run --all-files
+pytest
+```
+
+GitHub Actions runs pre-commit and pytest in separate workflows on pushes and pull requests.
+
+---
+
+## 🤖 AI Commit Summaries
+
+The `AI commit summary` GitHub Actions workflow summarizes the latest commit pushed to `main` and displays the result in that workflow run's **Summary** tab. It uses the official GitHub Copilot CLI. Add a fine-grained personal access token with the **Copilot Requests** account permission as the `COPILOT_GITHUB_TOKEN` Actions repository secret under **Settings → Secrets and variables → Actions**. The token must belong to a personal account with an active Copilot subscription.
+
+The commit diff is sent to GitHub Copilot for processing. Do not enable this workflow for repositories containing code or data that must not be shared with GitHub.
+
+---
+
 ## 🐳 Docker
 
 ```bash
@@ -166,7 +189,7 @@ pymupdf>=1.24.0
 
 **Witold Włuczkowski**
 
-🌐 [Portfolio & Contact](https://earthalign.github.io/witoldwluczkowski/strona2.html)
+🌐 [Portfolio & Contact](https://earthalign.github.io/witoldwluczkowski/portfolio.html)
 
 ---
 

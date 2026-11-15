@@ -52,9 +52,66 @@ document.addEventListener('mouseout', event => {
 
 const CLASSES = window.CLASSES;
 const RACES = window.RACES;
+const RACE_FAMILIES = window.RACE_FAMILIES;
 const BACKGROUNDS = window.BACKGROUNDS;
 const SKILLS = window.SKILLS;
 const SPELLS_DATA = window.SPELLS_DATA;
+
+function getRaceFamilyKey(raceKey) {
+    for (const [familyKey, family] of Object.entries(RACE_FAMILIES)) {
+        if (family.subraces.includes(raceKey)) return familyKey;
+    }
+    return raceKey;
+}
+
+function populateRaceSubraces(familyKey, selectedRaceKey = '') {
+    const subraceSelect = document.getElementById('race-subrace');
+    const subraces = RACE_FAMILIES[familyKey].subraces;
+    subraceSelect.innerHTML = '';
+    for (const raceKey of subraces) {
+        const race = RACES[raceKey];
+        const option = document.createElement('option');
+        option.value = raceKey;
+        option.textContent = currentLang === 'en' && race.name_en ? race.name_en : race.name;
+        subraceSelect.appendChild(option);
+    }
+    subraceSelect.value = subraces.includes(selectedRaceKey) ? selectedRaceKey : subraces[0];
+}
+
+function onRaceFamilyChange() {
+    const raceFamily = document.getElementById('race-family').value;
+    const raceSubraceContainer = document.getElementById('race-subrace-container');
+    const raceSubrace = document.getElementById('race-subrace');
+    if (RACE_FAMILIES[raceFamily]) {
+        populateRaceSubraces(raceFamily, document.getElementById('race').value);
+        raceSubraceContainer.classList.remove('hidden');
+        document.getElementById('race').value = raceSubrace.value;
+    } else {
+        raceSubraceContainer.classList.add('hidden');
+        document.getElementById('race').value = raceFamily;
+    }
+    updateUI();
+}
+
+function onRaceSubraceChange() {
+    document.getElementById('race').value = document.getElementById('race-subrace').value;
+    updateUI();
+}
+
+function setSelectedRace(raceKey) {
+    const raceFamily = document.getElementById('race-family');
+    const raceSubraceContainer = document.getElementById('race-subrace-container');
+    const familyKey = getRaceFamilyKey(raceKey);
+    if (RACE_FAMILIES[familyKey]) {
+        raceFamily.value = familyKey;
+        populateRaceSubraces(familyKey, raceKey);
+        raceSubraceContainer.classList.remove('hidden');
+    } else {
+        raceFamily.value = raceKey;
+        raceSubraceContainer.classList.add('hidden');
+    }
+    document.getElementById('race').value = raceKey;
+}
 
 
 
@@ -1230,7 +1287,8 @@ function updateDetailsInfo(raceKey, classKey, bgKey, level = 1, subclassKey = nu
     if (race) {
         const raceName = useEn && race.name_en ? race.name_en : race.name;
         const raceDesc = useEn && race.description_en ? race.description_en : race.description;
-        let traitsHtml = race.traits.map(t_trait => `<li class="text-xs text-gray-400 leading-normal">• ${t_trait}</li>`).join('');
+        const raceTraits = useEn && race.traits_en ? race.traits_en : race.traits;
+        let traitsHtml = raceTraits.map(t_trait => `<li class="text-xs text-gray-400 leading-normal">• ${t_trait}</li>`).join('');
         let asiHtml = Object.entries(getRacialBonuses(raceKey)).map(([s, val]) => 
             `<span class="text-[9px] font-bold bg-amber-500/10 border border-amber-500/25 text-amber-400 px-2 py-0.5 rounded font-mono">${s.toUpperCase()} +${val}</span>`
         ).join(' ');
@@ -1891,7 +1949,7 @@ async function autoGenerateCharacter() {
 
         // Apply basic fields — do NOT overwrite level (user chose it)
         document.getElementById('char_class').value = data.char_class;
-        document.getElementById('race').value = data.race;
+        setSelectedRace(data.race);
         document.getElementById('background').value = data.background;
         // Keep level as user selected
         document.querySelector('[name=name]').value = data.name;
@@ -2016,7 +2074,7 @@ async function importCharacterFile(input) {
         document.querySelector('[name="alignment"]').value = character.alignment || 'Neutralny';
         document.getElementById('char_class').value = character.char_class;
         document.getElementById('level').value = level;
-        document.getElementById('race').value = character.race;
+        setSelectedRace(character.race);
         document.getElementById('background').value = character.background;
         state.baseStats = Object.fromEntries(statKeys.map(stat => [stat, Number(character.stats[stat])]));
         state.statMode = ['point_buy', 'dice', 'custom'].includes(character.stat_mode) ? character.stat_mode : 'custom';

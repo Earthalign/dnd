@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import random
 
-from app.core.rules import CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, FEATS, WILD_SHAPE_FORMS, ELEMENTAL_FORMS, SPELLS_BY_ID, get_spells
+from app.core.rules import CLASSES, RACES, RACE_FAMILIES, RACE_SUBRACE_KEYS, BACKGROUNDS, SKILLS, SPELLS, FEATS, WILD_SHAPE_FORMS, ELEMENTAL_FORMS, SPELLS_BY_ID, get_spells
 from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS, SHOP_ITEMS, STARTING_GOLD_RULES
 from app.core import progression
 from app.schemas.character import CharacterCreateSchema
@@ -40,6 +40,8 @@ async def index(request: Request):
         context={
             "classes": CLASSES,
             "races": RACES,
+            "race_families": RACE_FAMILIES,
+            "race_subrace_keys": RACE_SUBRACE_KEYS,
             "backgrounds": BACKGROUNDS,
             "skills": SKILLS,
             "spells": SPELLS,
@@ -160,9 +162,9 @@ async def api_auto_character(data: dict = {}):
         class_cantrips = [s["id"] for s in SPELLS.get("cantrip", []) if char_class in s["classes"]]
         ct_known = progression.CANTRIPS_KNOWN.get(char_class, {})
         ct_count = 0
-        for l in sorted(ct_known.keys()):
-            if level >= l:
-                ct_count = ct_known[l]
+        for level_threshold in sorted(ct_known.keys()):
+            if level >= level_threshold:
+                ct_count = ct_known[level_threshold]
         if class_cantrips and ct_count > 0:
             cantrips = random.sample(class_cantrips, min(ct_count, len(class_cantrips)))
         
@@ -186,7 +188,11 @@ async def api_auto_character(data: dict = {}):
                 spell_lvls[f"spells_{lvl_circle}"] = random.sample(circle_spells, pick_num)
 
     # ASI slots
-    asi_level_list = [l for l in (progression.ASI_LEVELS.get(char_class) or []) if level >= l]
+    asi_level_list = [
+        level_threshold
+        for level_threshold in (progression.ASI_LEVELS.get(char_class) or [])
+        if level >= level_threshold
+    ]
     feat_keys = list(FEATS.keys())
     asi_slots = []
     for _ in asi_level_list:

@@ -1,4 +1,3 @@
-import ast
 import json
 
 feats_data = {

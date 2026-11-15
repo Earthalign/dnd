@@ -35,17 +35,20 @@ RACES = {
         "speed": 9,
         "size": "Średni",
         "traits": [
-            "Mroczne widzenie (18m)",
-            "Rodowód fey: Przewaga vs zauroczeniom, odporność na magiczny sen",
-            "Trans (4 godziny odpoczynku)",
-            "Biegłość w broni elfów: Długi miecz, krótki miecz, krótki łuk, długi łuk",
-            "Dodatkowa sztuczka (oparta na Inteligencji)",
-            "Dodatkowy język"
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
+            "Bystry zmysł: biegłość w Percepcji",
+            "Rodowód fey: przewaga w rzutach obronnych przeciw zauroczeniu; magia nie może cię uśpić",
+            "Trans: nie potrzebujesz snu; 4 godziny medytacji dają korzyść z 8 godzin snu",
+            "Biegłość w broni elfów: długi miecz, krótki miecz, krótki łuk i długi łuk",
+            "Sztuczka: wybierz sztuczkę z listy czarodzieja; Inteligencja jest twoją cechą czarowania",
+            "Dodatkowy język do wyboru",
+            "Wiek: elfy zwykle uznają dorosłość około 100. roku życia i mogą dożyć 750 lat"
         ],
         "languages": ["Wspólny", "Elficki", "+ 1 do wyboru"],
         "darkvision": True,
         "skill_proficiencies": ["postrzeganie"],
         "description": "Elegancka i długowieczna rasa z powinowactwem do magii.",
+        "description_en": "Graceful and long-lived, high elves have keen minds and an affinity for arcane magic.",
         "subraces": {},
     },
     "elf_wood": {
@@ -55,16 +58,20 @@ RACES = {
         "speed": 10.5,
         "size": "Średni",
         "traits": [
-            "Mroczne widzenie (18m)",
-            "Rodowód fey: Przewaga vs zauroczeniom, odporność na magiczny sen",
-            "Trans (4 godziny odpoczynku)",
-            "Biegłość w broni elfów: Długi miecz, krótki miecz, krótki łuk, długi łuk",
-            "Zwinność lasu: Możesz się ukryć będąc tylko lekko przysłoniętym przez naturę"
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
+            "Bystry zmysł: biegłość w Percepcji",
+            "Rodowód fey: przewaga w rzutach obronnych przeciw zauroczeniu; magia nie może cię uśpić",
+            "Trans: nie potrzebujesz snu; 4 godziny medytacji dają korzyść z 8 godzin snu",
+            "Biegłość w broni elfów: długi miecz, krótki miecz, krótki łuk i długi łuk",
+            "Zwinność leśna: prędkość chodzenia 10,5 m",
+            "Maska dziczy: możesz próbować ukryć się, gdy zasłaniają cię zjawiska naturalne, np. listowie, ulewny deszcz, śnieg lub mgła",
+            "Wiek: elfy zwykle uznają dorosłość około 100. roku życia i mogą dożyć 750 lat"
         ],
         "languages": ["Wspólny", "Elficki"],
         "darkvision": True,
         "skill_proficiencies": ["postrzeganie"],
-        "description": "Zwinna rasa elfów żyjących w harmonii z naturą.",
+        "description": "Zwinne elfy leśne o wyostrzonych zmysłach, szybszym kroku i zdolności znikania w naturalnym otoczeniu.",
+        "description_en": "Agile wood elves have keen senses, a swift stride, and a knack for blending into natural surroundings.",
         "subraces": {},
     },
     "elf_shadar_kai": {
@@ -77,11 +84,11 @@ RACES = {
             "Typ istoty: humanoid; jesteś także elfem na potrzeby wymagań i efektów",
             "Błogosławieństwo Królowej Kruków: akcją bonusową teleportujesz się magicznie do 9 m w widoczne, wolne miejsce; liczba użyć równa premii z biegłości, odzyskujesz je po długim odpoczynku",
             "Od 3. poziomu: po teleportacji zyskujesz odporność na wszystkie obrażenia do początku swojej następnej tury; wyglądasz wtedy na widmowego i półprzezroczystego",
-            "Mroczne widzenie (18 m): w ciemności widzisz odcienie szarości",
-            "Rodowód fey: przewaga w rzutach obronnych przeciw zauroczeniu; magia nie może uśpić",
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
+            "Rodowód fey: przewaga w rzutach obronnych przeciw zauroczeniu; magia nie może cię uśpić",
             "Bystry zmysł: biegłość w Percepcji",
             "Odporność na obrażenia nekrotyczne",
-            "Trans: nie potrzebujesz snu; długi odpoczynek trwa 4 godziny medytacji; po transie wybierasz 2 biegłości w broniach lub narzędziach z PHB do następnego długiego odpoczynku",
+            "Trans: nie potrzebujesz snu; 4 godziny medytacji dają korzyść z 8 godzin snu; po transie wybierasz 2 biegłości w broniach lub narzędziach, które trwają do następnego długiego odpoczynku",
         ],
         "skill_proficiencies": ["postrzeganie"],
         "languages": ["Wspólny", "+ 1 do wyboru"],
@@ -97,17 +104,19 @@ RACES = {
         "speed": 7.5,
         "size": "Średni",
         "traits": [
-            "Mroczne widzenie (18m)",
-            "Odporność krasnoludów: Przewaga vs trucizny, odporność na trucizny",
-            "Wyczucie kamienia: Biegłość w historii dot. kamienia, x2 premię za biegłość",
-            "Waleczność: Biegłość w bojowym toporze, ręcznym toporze, lekkim młocie, młocie bojowym",
-            "Narzędzia: Biegłość w wybranych narzędziach rzemieślniczych",
-            "Wytrwałość krasnoludów (nie spowalnia ich zbroja)",
-            "Wytrzymałość wzgórza: +1 max PW za poziom"
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
+            "Odporność krasnoludów: przewaga w rzutach obronnych przeciw truciznom i odporność na obrażenia od trucizn",
+            "Trening bojowy: biegłość w toporze bojowym, toporku, lekkim młocie i młocie bojowym",
+            "Biegłość w narzędziach rzemieślniczych: wybierz narzędzia kowalskie, browarnicze albo kamieniarskie",
+            "Wyczucie kamienia: przy testach Historii (Int) o pochodzeniu kamieniarki traktujesz się jako biegły i dodajesz podwójną premię z biegłości",
+            "Krasnoludzka szybkość: chodzenie 7,5 m; ciężki pancerz nie zmniejsza twojej prędkości",
+            "Wytrzymałość wzgórza: maksymalne PW zwiększają się o 1 na każdym poziomie",
+            "Wiek: dojrzewają jak ludzie, lecz za dorosłe uznaje się je po 50. roku życia; żyją średnio około 350 lat"
         ],
         "languages": ["Wspólny", "Krasnoludzki"],
         "darkvision": True,
         "description": "Odporne krasnoludy wzgórz, słynne z wytrzymałości i mądrości.",
+        "description_en": "Hill dwarves are hardy and perceptive, with remarkable resilience.",
         "subraces": {},
     },
     "dwarf_mountain": {
@@ -117,17 +126,19 @@ RACES = {
         "speed": 7.5,
         "size": "Średni",
         "traits": [
-            "Mroczne widzenie (18m)",
-            "Odporność krasnoludów",
-            "Wyczucie kamienia",
-            "Waleczność krasnoludów",
-            "Narzędzia krasnoludzkie",
-            "Wytrwałość krasnoludów",
-            "Górska zbroja: Biegłość w lekkiej i średniej zbroi",
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
+            "Odporność krasnoludów: przewaga w rzutach obronnych przeciw truciznom i odporność na obrażenia od trucizn",
+            "Trening bojowy: biegłość w toporze bojowym, toporku, lekkim młocie i młocie bojowym",
+            "Biegłość w narzędziach rzemieślniczych: wybierz narzędzia kowalskie, browarnicze albo kamieniarskie",
+            "Wyczucie kamienia: przy testach Historii (Int) o pochodzeniu kamieniarki traktujesz się jako biegły i dodajesz podwójną premię z biegłości",
+            "Krasnoludzka szybkość: chodzenie 7,5 m; ciężki pancerz nie zmniejsza twojej prędkości",
+            "Górski trening pancerza: biegłość w lekkich i średnich pancerzach",
+            "Wiek: dojrzewają jak ludzie, lecz za dorosłe uznaje się je po 50. roku życia; żyją średnio około 350 lat",
         ],
         "languages": ["Wspólny", "Krasnoludzki"],
         "darkvision": True,
         "description": "Potężne krasnoludy górskie, waleczne i silne.",
+        "description_en": "Mountain dwarves are strong and hardy, accustomed to rugged terrain.",
         "subraces": {},
     },
     "halfling_lightfoot": {
@@ -171,7 +182,7 @@ RACES = {
         "speed": 9,
         "size": "Mały",
         "traits": [
-            "Mroczne widzenie (18m)",
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
             "Zwinna ucieczka: Możesz wykonać akcję Ukrycia lub Odskoku jako akcję dodatkową",
             "Furia Małych: Raz na długi odpoczynek zadaj dodatkowe obrażenia równe poziomowi postaci, gdy trafisz atakiem lub zaklęciem stworzenie większe od ciebie",
         ],
@@ -219,13 +230,52 @@ RACES = {
         "size": "Mały",
         "traits": [
             "Mroczne widzenie (18m)",
-            "Spryt gnoma: Przewaga na rzuty Int, Mdr, Cha vs magia",
-            "Iluzja natury: Sztuczka Drobnych Złudzeń",
-            "Rozmowa ze zwierzętami: Prosty komunikat z małymi naturalnymi zwierzętami",
+            "Spryt gnoma: przewaga w rzutach obronnych na Inteligencję, Mądrość i Charyzmę przeciw magii",
+            "Iluzjonista natury: znasz sztuczkę Drobne złudzenie; Inteligencja jest twoją cechą czarowania",
+            "Rozmowa z małymi zwierzętami: możesz przekazywać proste idee bestiom rozmiaru Małego lub mniejszym",
+            "Wiek: dorosłość około 40 lat; gnomy żyją od 350 do niemal 500 lat",
+        ],
+        "traits_en": [
+            "Darkvision: see in dim light within 60 feet as if bright light, and darkness as if dim light; colors appear as shades of gray",
+            "Gnome Cunning: advantage on Intelligence, Wisdom, and Charisma saving throws against magic",
+            "Natural Illusionist: you know the Minor Illusion cantrip; Intelligence is your spellcasting ability",
+            "Speak with Small Beasts: communicate simple ideas with Beasts of Small size or smaller",
+            "Age: adulthood around 40; gnomes live 350 to almost 500 years",
         ],
         "languages": ["Wspólny", "Gnomi"],
         "darkvision": True,
-        "description": "Żywiołowe i ciekawskie gnomy, zaprzyjaźnione z naturą.",
+        "description": "Ciekawskie, pełne energii i pomysłowe; gnomy czerpią radość z odkrywania, nauki i tworzenia. Leśne gnomy są szczególnie związane z naturą i iluzją.",
+        "description_en": "Curious, energetic, and inventive, gnomes delight in discovery, learning, and making things. Forest gnomes are especially connected to nature and illusion.",
+        "subraces": {},
+    },
+    "gnome_rock": {
+        "name": "Gnom Skalny",
+        "name_en": "Rock Gnome",
+        "asi": {"int": 2, "con": 1},
+        "speed": 7.5,
+        "size": "Mały",
+        "traits": [
+            "Mroczne widzenie: w promieniu 18 m widzisz słabe światło jak jasne, a ciemność jak słabe; w ciemności widzisz tylko odcienie szarości",
+            "Spryt gnoma: przewaga w rzutach obronnych na Inteligencję, Mądrość i Charyzmę przeciw magii",
+            "Wiedza wynalazcy: podwójna premia z biegłości do testów Historii (Int) dotyczących magicznych przedmiotów, obiektów alchemicznych lub urządzeń technicznych",
+            "Majsterkowanie: biegłość w narzędziach majsterkowicza; w 1 godzinę i za 10 sz złota w materiałach tworzysz jeden z maksymalnie trzech aktywnych mechanicznych drobiazgów",
+            "Drobiazgi: zabawka mechaniczna (ruch 1,5 m na turę), zapalarka (akcja, by rozpalić świecę, pochodnię lub ognisko) albo pozytywka (jedna melodia)",
+            "Każdy drobiazg ma KP 5 i 1 PW, przestaje działać po 24 godzinach bez godzinnej naprawy; można go rozmontować akcją i odzyskać materiały",
+            "Wiek: dorosłość około 40 lat; gnomy żyją od 350 do niemal 500 lat",
+        ],
+        "traits_en": [
+            "Darkvision: see in dim light within 60 feet as if bright light, and darkness as if dim light; colors appear as shades of gray",
+            "Gnome Cunning: advantage on Intelligence, Wisdom, and Charisma saving throws against magic",
+            "Artificer's Lore: double your proficiency bonus on Intelligence (History) checks about magic items, alchemical objects, or technological devices",
+            "Tinker: proficiency with tinker's tools; spend 1 hour and 10 gp of materials to make a Tiny clockwork device (AC 5, 1 hit point); up to three can be active at once",
+            "A device stops working after 24 hours unless repaired for 1 hour; dismantling it takes an action and lets you reclaim its materials",
+            "Choose a clockwork toy (moves 5 feet each turn in a random direction and makes fitting noises), a fire starter (lights a candle, torch, or campfire as an action), or a music box (plays one song when opened)",
+            "Age: adulthood around 40; gnomes live 350 to almost 500 years",
+        ],
+        "languages": ["Wspólny", "Gnomi"],
+        "darkvision": True,
+        "description": "Ciekawskie i pomysłowe gnomy skalne słyną z wynalazków, wiedzy technicznej oraz mechanicznych drobiazgów.",
+        "description_en": "Curious and inventive, rock gnomes are known for their engineering lore and clockwork devices.",
         "subraces": {},
     },
     "aasimar": {
@@ -313,6 +363,26 @@ RACES = {
         "description": "Krukoludzie pozbawieni skrzydeł i własnego głosu, skazani na naśladownictwo.",
         "subraces": {},
     }
+}
+
+RACE_FAMILIES = {
+    "elf": {
+        "name": "Elf",
+        "subraces": ["elf_high", "elf_wood", "elf_shadar_kai"],
+    },
+    "dwarf": {
+        "name": "Krasnolud",
+        "subraces": ["dwarf_hill", "dwarf_mountain"],
+    },
+    "gnome": {
+        "name": "Gnom",
+        "subraces": ["gnome_forest", "gnome_rock"],
+    },
+}
+RACE_SUBRACE_KEYS = {
+    subrace
+    for family in RACE_FAMILIES.values()
+    for subrace in family["subraces"]
 }
 
 CLASSES = {
@@ -747,7 +817,13 @@ SKILLS = {
     "survival": {"name": "Sztuka przetrwania", "name_en": "Survival", "stat": "wis", "desc": "Tropienie, orientacja w terenie, polowanie."}
 }
 
-from app.core.spells import SPELLS, SPELLS_BY_ID, get_spell_by_id, get_spells
+# Imported after the rule data to avoid the rules/spells import cycle.
+from app.core.spells import (  # noqa: E402
+    SPELLS as SPELLS,
+    SPELLS_BY_ID as SPELLS_BY_ID,
+    get_spell_by_id as get_spell_by_id,
+    get_spells as get_spells,
+)
 
 STAT_NAMES = {
     "str": "Siła",

@@ -6,9 +6,9 @@ import math
 import json
 from typing import Dict, List, Tuple
 from app.core.rules import (
-    CLASSES, RACES, BACKGROUNDS, SKILLS, SPELLS, STAT_NAMES,
+    CLASSES, RACES, BACKGROUNDS, SKILLS, STAT_NAMES,
     POINT_BUY_COSTS, POINT_BUY_TOTAL, POINT_BUY_MIN, POINT_BUY_MAX,
-    STANDARD_ARRAY, CLASS_STAT_PRIORITY, PROFICIENCY_BY_LEVEL
+    CLASS_STAT_PRIORITY, PROFICIENCY_BY_LEVEL
 )
 from app.core.progression import CASTER_TYPE, FULL_CASTER_SLOTS, HALF_CASTER_SLOTS, THIRD_CASTER_SLOTS, WARLOCK_SLOTS, SUBCLASSES, CLASS_FEATURES, SUBCLASS_LEVEL, ARTIFICER_SLOTS, WARLOCK_INVOCATIONS, WARLOCK_INVOCATION_COUNTS
 from app.core.equipment import CLASS_EQUIPMENT, WEAPONS, ARMORS, SHOP_ITEMS, STARTING_GOLD_RULES
@@ -557,9 +557,9 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     for weapon_id in dict.fromkeys(selected_weapon_ids):
         weapon = WEAPONS.get(weapon_id)
         item = SHOP_ITEMS.get(weapon_id, {})
-        name = weapon.get("name", item.get("name", weapon_id)) if weapon else item.get("name", weapon_id)
+        weapon_name = weapon.get("name", item.get("name", weapon_id)) if weapon else item.get("name", weapon_id)
         quantity = selected_weapon_ids.count(weapon_id)
-        label = f"{name}" + (f" x{quantity}" if quantity > 1 else "")
+        label = f"{weapon_name}" + (f" x{quantity}" if quantity > 1 else "")
         if weapon:
             properties = weapon.get("props", "")
             weapon_range = weapon.get("range", "")
