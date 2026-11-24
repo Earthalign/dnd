@@ -315,6 +315,7 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
     class_choices = class_data.get("skill_choices", [])
     allowed_class_skills = set(SKILLS) if class_choices == "all" else set(class_choices)
     allowed_skills = allowed_class_skills | set(bg_data.get("skills", []))
+    allowed_skills |= set(race_data.get("skill_proficiencies", []))
     custom_background_skills = set(data.custom_background_skills)
     if background == "custom":
         if len(custom_background_skills) != 2 or not custom_background_skills.issubset(SKILLS):
@@ -331,7 +332,10 @@ def build_character_sheet(data: CharacterCreateSchema) -> Dict:
 
     # Proficiencies
     saving_throw_profs = class_data.get("saving_throws", [])
-    skill_profs = sorted(set(data.skills) | custom_background_skills | set(race_data.get("skill_proficiencies", [])))
+    skill_profs = set(data.skills) | custom_background_skills | set(race_data.get("skill_proficiencies", []))
+    if char_class == "warlock" and "beguiling_influence" in data.invocations:
+        skill_profs |= {"oszustwo", "perswazja"}
+    skill_profs = sorted(skill_profs)
     expertise = data.expertise
     feats = data.feats
 

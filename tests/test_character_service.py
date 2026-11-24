@@ -98,3 +98,36 @@ def test_starting_gold_validation_returns_remaining_coins():
 
     with pytest.raises(ValueError, match="wzoru startowego"):
         validate_starting_gold_purchases("fighter", 40, "{}", "none")
+
+
+@pytest.mark.parametrize("race", [
+    "elf_high",
+    "elf_wood",
+    "elf_drow",
+    "elf_shadar_kai",
+])
+def test_hexblade_accepts_racial_skill_proficiency(race):
+    sheet = build_character_sheet(CharacterCreateSchema(
+        char_class="warlock",
+        subclass="hexblade",
+        level=3,
+        race=race,
+        background="folk_hero",
+        warlock_pact_boon="blade",
+        invocations=["armor_of_shadows", "devils_sight"],
+        skills=["arcana", "postrzeganie"],
+    ))
+
+    assert "postrzeganie" in sheet["skill_profs"]
+
+
+def test_beguiling_influence_grants_deception_and_persuasion():
+    sheet = build_character_sheet(CharacterCreateSchema(
+        char_class="warlock",
+        level=2,
+        warlock_pact_boon="",
+        invocations=["beguiling_influence", "devils_sight"],
+        skills=["arcana", "historia"],
+    ))
+
+    assert {"oszustwo", "perswazja"} <= set(sheet["skill_profs"])
